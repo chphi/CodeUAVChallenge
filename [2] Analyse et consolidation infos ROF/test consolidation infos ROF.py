@@ -68,7 +68,8 @@ liste_caps = [ [-4], [-3, angle_fausse_alerte], [3] ]  # CAPS de la flèche sur 
 
   # Consolidation des infos en analysant une série de 3 images, moyennage et calcul des incertitudes
 
-fleche_validee, coords_fleche, sigma_pos, cap_fleche, sigma_cap = loc.analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
+resultat = loc.analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_memoire, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
+fleche_validee, coords_fleche, sigma_pos, cap_fleche, sigma_cap = resultat
 
 # mémorise l'objet dans la liste des formes repérées (décrit le parcours déjà suivi)
 parcours.append( (coords_fleche, cap_fleche) )
