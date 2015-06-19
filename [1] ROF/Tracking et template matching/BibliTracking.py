@@ -10,11 +10,14 @@ des tests sur les contours des objets, et des tests de corrélation avec un "pat
 Sommaire des fonctions :
 
   - initVideoFlow
+      -> lance l'acquisition vidéo sur la webcam ou la caméra du drone  
   
   - getImage
-  
+      -> récupère une image avec la même divergence de cas
+      
   - endVideoFlow
-
+      -> termine l'acquisition vidéo et ferme la/les fenêtres
+      
   - trackeTeinte
       -> sélectionne une teinte de l'image
       
@@ -94,6 +97,7 @@ def endVideoFlow(is_cam_embarquee, cap):
     else:
         del cap
     cv2.destroyAllWindows()
+    
 
 def trackeTeinte(frame, h_cible, marge_h, n_blur, kernel, s_min, v_min):
     """
