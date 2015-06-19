@@ -394,7 +394,7 @@ def testeReconnaissancesSuccessives(liste_coords, taille_mem):
     except Exception, e:
       b = False
    
-   return b
+    return b
     
    
 def analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_mem, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam):
