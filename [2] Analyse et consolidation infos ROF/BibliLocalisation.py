@@ -4,8 +4,11 @@ Created on Fri Jun 12 20:56:44 2015
 
 @author: Charles
 
-Ce script est une bibliothèque de fonctions servant à calculer la localisation GPS d'un objet vu par la caméra du drone
-en fonction d'informations sur la position (GPS et altitude) du drone et de la position de l'objet sur l'image
+Cette classe est une bibliothèque de fonctions servant à calculer la localisation GPS d'un objet vu par la
+caméra du drone en fonction d'informations sur la position (GPS et altitude) du drone et de la position de 
+l'objet sur l'image
+
+NB : il faudra mesurer l'angle d'ouverture de la caméra pour le rentrer dans cette bibliothèque
 
 Sommaire des fonctions :
 
@@ -13,28 +16,75 @@ Sommaire des fonctions :
       -> sinus d'un angle en degrés
       
   - cosinus
-      -> idem en cos
+      -> cosinus d'un angle en degrés
      
   - posPixToPosRelativeDrone
-      -> transforme la position d'un point sur l'image (ligne et colonne) en position relative par rapport au drone (mètres)
+      -> transforme la position d'un point sur l'image (ligne et colonne) en position relative par rapport au
+      drone (mètres)
   
   - angleFlecheToCap
       -> à partir de l'angle d'une flèche et du cap du drone, donne le cap absolu de la flèche
   
   - posRelativeToPosNSEW
-      -> à partir de la position relative en mètres d'un objet par rapport au drone, donne la position relative selon les axes
-         Nord-Sud et Est-Ouest
+      -> à partir de la position relative en mètres d'un objet par rapport au drone, donne la position relative
+      selon les axes Nord-Sud et Est-Ouest
   
   - posNSEWtoCoordsGPS
-      -> à partir de la position relative par rapport au drone selon les axes Nord-Sud et Est-Ouest, donne les coordonnées GPS
-         de l'objet vu à l'image
+      -> à partir de la position relative par rapport au drone selon les axes Nord-Sud et Est-Ouest, donne les
+      coordonnées GPS de l'objet vu à l'image
   
   - coordsGPSobjet
       -> passe directement de la position sur l'image (en lignes et colonnes) aux coordonnées GPS de l'objet vu
       
   - coordsNextWaypoint
-      -> à partir des coordonnées d'une flèche donne les coordonnées d'un waypoint 15m plus loin dans la direction de la flèche
+      -> à partir des coordonnées d'une flèche donne les coordonnées d'un waypoint 15m plus loin dans la direction
+      de la flèche
       
+  - differenceCoords
+      ->
+  
+  - distance
+      ->
+  
+  - moyenne
+      ->
+  
+  - ecartType
+      ->
+  
+  - supprValeursAberrantes
+      ->
+  
+  - filtreCaps
+      ->
+  
+  - filtreCoordonnees
+      ->
+  
+  - rassembleCoords
+      ->
+  
+  - supprimeCoordsEtCapsAberrants
+      ->
+  
+  - memoriseNewCoords
+      ->
+  
+  - memoriseNewCaps
+      ->
+  
+  - calculeMoyenneEtSigmaPosition
+      ->
+  
+  - calculeMoyenneEtSigmaCap
+      ->
+  
+  - testeReconnaissancesSuccessives
+      ->
+  
+  - analyseReconnaissanceFleche
+      ->
+
 """
 
 
@@ -189,18 +239,23 @@ def distance(coords1, coords2):
     return np.sqrt(d_NS**2 + d_EO**2)
 
 def moyenne(tab):
-    
+    """
+    retourne la moyenne d'un tableau de nombres (numpy array)
+    """
     return np.mean(tab)
 
 def ecartType(tab):
-    
+    """
+    retourne l'écart type d'un tableau de nombres (numpy array)
+    """
     m=moyenne(tab)
     return moyenne([(x-m)**2 for x in tab]) **0.5  
 
 
 def supprValeursAberrantes(tab, taille_finale):
     """
-    supprime les valeurs d'un tableau de nombres le plus éloignées de la moyenne tant qu'on est au dessus de la taille min
+    supprime les valeurs d'un tableau de nombres les plus éloignées de la moyenne, tant qu'on est
+    au dessus de la taille finale
     """
     while (len(tab)) > taille_finale:
         ecarts_valeur_moy = abs(tab - moyenne(tab))
@@ -211,10 +266,12 @@ def supprValeursAberrantes(tab, taille_finale):
      
      
 def filtreCaps(caps):
-
+    """
+    Applique la fonction précédente à un tableau de listes de caps (tableau des caps de la flèche à chaque
+    instant, c'est pour ça que si on voit plusieurs flèches sur une image, il y aura une liste de caps)
+    """
     taille_mem = len(caps)          # taille mémoire    
     l = np.concatenate(caps) 
-    
     caps_coherents = supprValeursAberrantes(l, taille_mem)
     
     return caps_coherents
@@ -223,36 +280,34 @@ def filtreCoordonnees(localisations):
     """
     idem que la fonction précédente pour des tuples à la place des nombres : travaille séparément sur les 1ers et seconds élts
     """
-
     taille_mem = len(localisations)          # taille mémoire    
     l = np.concatenate(localisations)
-    
     l = np.concatenate(l)                    # concatène toutes les coordonnées : [lat1, long1, lat2, long2, ...]
     n = len(l)
-    
     latitudes = l[0:n-1:2]                   # récupère les latitudes (indices pairs)
     longitudes = l[1:n:2]
-    
     lat_coherentes = supprValeursAberrantes(latitudes, taille_mem)
     longit_coherentes = supprValeursAberrantes(longitudes, taille_mem)
     
     return lat_coherentes, longit_coherentes
         
     
-
 def rassembleCoords(latitudes, longitudes):
-    
+    """
+    rassemble un tableau de latitudes et de longitudes pour faire un tableau de coordonnées (array de tuples)
+    """
     coords = []
-    
     for i in range(len(latitudes)):
-        
         coords.append( (latitudes[i], longitudes[i]) )
         
     return coords
     
 
 def supprimeCoordsEtCapsAberrants(liste_coordonnees, liste_caps):
-    
+    """
+    Filtre les caps et coordonnées en même temps pour ne garder que les plus cohérents. Utilise les
+    sous-fonctions relatives à ces deux grandeurs.
+    """
     lats_filtrees, longits_filtrees = filtreCoordonnees(liste_coordonnees)
     caps_filtres = filtreCaps(liste_caps)
     
@@ -260,12 +315,16 @@ def supprimeCoordsEtCapsAberrants(liste_coordonnees, liste_caps):
     
     
 def memoriseNewCoords(liste_coords, liste_pos_objet_sur_image, coords_drone, cap_drone, alt_drone, orientation_cam):    
+    """
+    Mémorise les coordonnées de l'objet (ou des objets) vus à l'image dans la liste "mémoire" liste_coords
+    Cette liste est de taille fixe (mémoire à court terme, taille fixée par le script)
     
+    Cette fonction ne tient pas compte de la tailel fixe : elle enlève l'élément le plus ancien et ajoute le
+    nouveau. Il est donc important d'initialiser liste_coords au bon nombre d'éléments.
+    """
     list_new_coords = []
-    
     for i in range(len(liste_pos_objet_sur_image)):
         list_new_coords.append(coordsGPSobjet(coords_drone, cap_drone, alt_drone, liste_pos_objet_sur_image[i], orientation_cam))
-
     del liste_coords[0]
     liste_coords.append(list_new_coords)
     
@@ -273,12 +332,17 @@ def memoriseNewCoords(liste_coords, liste_pos_objet_sur_image, coords_drone, cap
     
     
 def memoriseNewCaps(liste_caps, liste_angle_fleche_sur_image, cap_drone):
-
+    """
+    Mémorise les caps de la flèche (ou les flèches) vues à l'image dans la liste "mémoire" liste_caps
+    Cette liste est de taille fixe (mémoire à court terme, taille fixée par le script)
+    
+    Cette fonction ne tient pas compte de la tailel fixe : elle enlève l'élément le plus ancien et ajoute le
+    nouveau. Il est donc important d'initialiser liste_caps au bon nombre d'éléments (même nombre que la liste
+    des coordonnées).
+    """
     new_caps = []
-
     for i in range(len(liste_angle_fleche_sur_image)):
         new_caps.append( angleFlecheToCap(liste_angle_fleche_sur_image[i], cap_drone) )    
-    
     del liste_caps[0]
     liste_caps.append(new_caps)
     
@@ -286,10 +350,12 @@ def memoriseNewCaps(liste_caps, liste_angle_fleche_sur_image, cap_drone):
     
 
 def calculeMoyenneEtSigmaPosition(lats, longits):
-    
+    """
+    Calcule en une fois la moyenne et l'écart-type sur une liste de coordonnées (à rentrer sous forme séparée
+    latitudes et longitudes.
+    """
     # calcul de la position GPS moyenne
-    coords_moyennes = ( np.mean(lats), np.mean(longits) )
-    
+    coords_moyennes = ( moyenne(lats), moyenne(longits) )
     # calcul de l'écart-type sur cette position
     serie_coords = rassembleCoords(lats, longits)
     d = []
@@ -301,10 +367,11 @@ def calculeMoyenneEtSigmaPosition(lats, longits):
     
     
 def calculeMoyenneEtSigmaCap(caps_filtres):    
-   
+   """
+   Calcule en une fois la moyenne et l'écart-type sur une liste de caps
+   """
    # moyenne du cap
    cap_moyen = np.mean(caps_filtres)
-   
    # écart-type du cap
    d = caps_filtres - cap_moyen
    sigma_cap = np.sqrt( np.dot(d,d) ) 
@@ -312,18 +379,30 @@ def calculeMoyenneEtSigmaCap(caps_filtres):
    return cap_moyen, sigma_cap
 
 
-def testeReconnaissancesSuccessives(liste_caps, taille_mem):
-
-    b = True
+def testeReconnaissancesSuccessives(liste_coords, taille_mem):
+    """
+    Détermine si on a bien reconnu l'objet sur les taille_mem dernières images successives
     
-    for i in range(taille_mem):
-        b = b and len(liste_caps[i]) > 0
-
-    return b
+    NB : dans le cas où on a reconnu 1 objet sur les images sauf la dernière où on ne l'a pas vu : 
+    pour la dernière image la liste vide sera ajoutée à liste_coords, elle n'aura donc pas la 
+    taille voulue et cela va lever une exception
+    """
+    b = True
+    try:
+      for i in range(taille_mem):
+          b = b and len(liste_coords[i]) > 0
+    except Exception, e:
+      b = False
+   
+   return b
     
    
 def analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_mem, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam):
-    
+    """
+    Fonction synthétique déterminant si on peut confirmer la détection d'une flèche vue à l'image.
+    Rend un booléen confirmant ou non cette détection, ainsi que la valeur et l'écart-type de la 
+    position GPS et du cap mesurés.
+    """
     pos_fleche = fleche.position
     angle_fleche = fleche.angle
     
