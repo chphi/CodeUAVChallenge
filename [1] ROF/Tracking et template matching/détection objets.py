@@ -28,7 +28,7 @@ import Croix as class_croix
 import Rectangle as class_rect
 
 
-# Définition des variables, initialisation du programme -------------------------------------------------
+# Définition des variables -----------------------------------------------------------------------------
 
 is_cam_embarquee = True                  # utilisation de la webcam ou de la caméra embarquée
 
