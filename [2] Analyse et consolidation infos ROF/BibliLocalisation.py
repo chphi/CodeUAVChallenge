@@ -395,7 +395,22 @@ def testeReconnaissancesSuccessives(liste_coords, taille_mem):
       b = False
    
     return b
+
+
+def dejaVu(parcours_valide, coords_nouvel_objet, d_seuil): 
+    """
+    détermine si un objet détecté puis validé n'avait pas déjà été survolé et inscrit dans le parcours.
+    parcours = liste de tuples (coordonnees, cap). cap = 0 si croix
+    """
+    deja_vu = False
+    for i in range(len(parcours_valide)):
+        d = distance(coords_nouvel_objet, parcours_valide[i][0])
+        if d < d_seuil:
+            deja_vu = True
+            break
     
+    return deja_vu        
+        
    
 def analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_mem, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam):
     """
@@ -424,19 +439,92 @@ def analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_mem, se
         
         # Sortie : transmettre à l'automate info sur la flèche, position, cap (moyennés), et afficher à l'écran
         if fleche_validee:
-            return True, loc_moyenne, sigma_pos, cap_moyen, sigma_cap 
+            return (True, loc_moyenne, sigma_pos, cap_moyen, sigma_cap) 
         else:
-            return False, (0,0), sigma_pos, 0, sigma_cap
+            return (False, (0,0), sigma_pos, 0, sigma_cap)
     
     else:
-        return False, (0,0), 0, 0, 0
+        return (False, (0,0), 0, 0, 0)
     
     
+def analyseReconnaissanceObjet(objet, liste_coords, taille_mem, seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam):
+    """
+    Fonction synthétique déterminant si on peut confirmer la détection d'une croix ou d'un rectangle
+    vu à l'image (PAS une flèche).
+    Rend un booléen confirmant ou non cette détection, ainsi que la valeur et l'écart-type de la 
+    position GPS.
+    """    
+    pos_objet = objet.position
+    
+    # Mémorisation nouvelles infos
+    liste_coords = memoriseNewCoords(liste_coords, pos_objet, coords_drone, cap_drone, alt_drone, orientation_cam)
+    
+    if testeReconnaissancesSuccessives(liste_coords, taille_mem): # vérifie qu'on a reconnu au moins 
+        # Calcul du chemin à écart-type minimal dans les listes et suppression des autres (positions/angles erronés)
+        lats_filtrees, longits_filtrees = filtreCoordonnees(liste_coords)
+        
+        # Calcul de la position GPS moyenne et cap moyen, et les écarts-types associés
+        loc_moyenne, sigma_pos = calculeMoyenneEtSigmaPosition(lats_filtrees, longits_filtrees)
+        
+        # Validation flèche
+        # la 3ème condition est de l'avoir effectivement détectée sur l'image en cours (sinon les calculs n'ont aucun sens)
+        objet_valide = (sigma_pos < seuil_sigma_pos) and objet.estDetecte
+        
+        # Sortie : transmettre à l'automate info sur la flèche, position, cap (moyennés), et afficher à l'écran
+        if objet_valide:
+            return (True, loc_moyenne, sigma_pos) 
+        else:
+            return (False, (0,0), sigma_pos)
+    
+    else:
+        return (False, (0,0), 0)
     
     
+def discrimineObjetsValides(donnees_fleche, donnees_croix, donnees_rectangle, parcours, d_seuil, coords_drone):
+    """
+    Vérifie que l'objet ou les objets validés n'ont pas déjà été vus, et s'il y en a plusieurs rend uniquement
+    celui le plus proche du drone. On peut aussi privilégier l'objet le plus en avant par rapport au drone (le
+    plus haut dans l'image)
+    """    
+    (fleche_validee, coords_fleche, sigma_pos_fleche, cap_fleche, sigma_cap) = donnees_fleche
+    (croix_validee, coords_croix, sigma_pos_croix) = donnees_croix
+    (rectangle_valide, coords_rectangle, sigma_pos_rectangle) = donnees_rectangle    
     
+    nouvelle_fleche = dejaVu(parcours, coords_fleche, d_seuil) # booléen valant vrai si la flèche est un nouvel objet
+    nouvelle_croix = dejaVu(parcours, coords_croix, d_seuil)
+    nouveau_rectangle = dejaVu(parcours, coords_rectangle, d_seuil)
     
+    types_objets = ['fleche','croix','rectangle']
+    liste_donnees = [donnees_fleche, donnees_croix, donnees_rectangle]
+    l = [nouvelle_fleche, nouvelle_croix, nouveau_rectangle]
     
+    # suppression des objets pas nouveaux ou pas validés
+    n = len(l)
+    i = 0
+    while i < n:
+        if (not l[i]) and liste_donnees[i][0]: # si l'objet a été validé et est nouveau, on le laisse dans la liste
+            i = i + 1
+        else:                            # sinon on supprime les infos associées
+            del l[i]
+            del types_objets[i]
+            del liste_donnees[i]
+            n = n - 1
+    
+    # dans ce qui reste on prend le plus proche du drone. Attention, l peut être vide à cette étape, d'où l'exception
+    distances = []
+    for i in range(len(l)):
+        distances.append(distance(coords_drone, liste_donnees[i][1]))
+    try:                                            # fait comme si l n'était pas vide
+        i_min = np.argmin(distances)
+        # résultats  
+        if types_objets[i_min] == 'fleche':         # si c'est la flèche on renvoie tel quel
+            parcours.append((coords_fleche, cap_fleche))
+            return parcours, ('fleche', coords_fleche, sigma_pos_fleche, cap_fleche, sigma_cap)
+        else:                                       # sinon on ajoute un faux cap et une fausse incertitude
+            parcours.append((liste_donnees[i_min][1], 0))
+            return parcours, (types_objets[i_min], liste_donnees[i_min][1], liste_donnees[i_min][2], 0, 0)
+    except Exception, e:                            # exception attrapée si la liste l est vide
+        return parcours, ('none', (0,0), 0, 0, 0)             # si aucun objet n'avait été confirmé (aucun qui soit neuf et validé)
     
     
     
