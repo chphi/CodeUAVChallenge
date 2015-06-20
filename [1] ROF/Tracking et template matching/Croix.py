@@ -11,7 +11,7 @@ import BibliTracking as track
 
 class Croix:
     
-    def __init__(self, patron, teinte, s_max, r_min, r_max, position, taille, est_detectee):
+    def __init__(self, patron, teinte, s_max, r_min, r_max, position, taille, est_detecte):
        
         self.teinte = teinte
         self.patron = patron
@@ -20,7 +20,7 @@ class Croix:
         self.rMax = r_max
         self.position = position
         self.taille = taille
-        self.estDetectee = est_detectee
+        self.estDetecte = est_detecte
        
        
        
@@ -32,11 +32,11 @@ class Croix:
         """
     
         t, S, rm, rM = self.teinte, self.sMax, self.rMin, self.rMax
-        croix_detectee = False     
+        croix_detecte = False     
         self.angle = -1
         self.position = []
         self.taille = []
-        self.estDetectee = False
+        self.estDetecte = False
         
         frame_trackee = track.trackeTeinte(frame, t, marge_h, n_blur, kernel, s_min, v_min)
         croix_probables = track.trouveObjetsProbables(frame_trackee.copy(), aire_min, aire_max, 0, S, rm, rM)
@@ -52,14 +52,14 @@ class Croix:
                 
                 zat_normalisee = cv2.resize(zone_a_tester, (50, 50))
                 indices_patrons_a_tester = track.determineIndicesPatronsATester(-1, pas_angle)
-                croix_detectee, _ = track.matchePatrons(zat_normalisee, indices_patrons_a_tester, patrons, seuil_certitude, n_gauss)            
+                croix_detecte, _ = track.matchePatrons(zat_normalisee, indices_patrons_a_tester, patrons, seuil_certitude, n_gauss)            
                 
-                if croix_detectee:
+                if croix_detecte:
                     cv2.drawContours(frame, [cnt], -1, (0,255,255), 1)
                     cv2.circle(frame,(x,y), 3, (0,255,255), -1)
                     self.position.append((x,y))
                     self.taille.append(taille_approx)
-                    self.estDetectee = True
+                    self.estDetecte = True
 
 
 
