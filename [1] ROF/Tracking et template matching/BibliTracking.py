@@ -65,10 +65,19 @@ def initVideoFlow(is_cam_embarquee):
     initialise le flux vidéo selon si on veut utiliser la webcam ou la caméra du drone
     """
     cv2.namedWindow('frame')
+        
     if is_cam_embarquee:
-        cap = Device(devnum=1, showVideoWindow=0)
+        try:
+           cap = Device(devnum=1, showVideoWindow=0)
+        except Exception, e:
+           print e
+           cv2.destroyAllWindows()
     else:
-        cap = cv2.VideoCapture(0)
+        try:  
+           cap = cv2.VideoCapture(0)
+        except Exception, e:
+           print e
+           cv2.destroyAllWindows()
         
     return cap
     
