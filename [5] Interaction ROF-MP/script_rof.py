@@ -14,65 +14,32 @@ détecte les flèches et les croix
 
 import cv2
 import sys
+
+
+# Variables --------------------------------------------------------------------
+
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+
+# infos sur le drone
+coords_drone = (48.7077, 2.1602)
+alt_drone = 10                           # altitude du drone en mètres
+cap_drone = 0                            # cap du drone (en degrés)
+orientation_cam = (0,0)                  # caméra à plat, devant = haut de l'image.
+
+# Initialisation du programme --------------------------------------------------
+
+# importe le fichier de configuration des scripts
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe les biblis persos
+sys.path.append(cf.libpath)
 import BibliTracking as track
 import BibliLocalisation as loc
 import BibliSysteme as bibsys
 import Fleche as class_fleche
 import Croix as class_croix
 import Rectangle as class_rect
-
-
-# Définition des variables ------------------------------------------------------------------------
-
-is_cam_embarquee = False                 # utilisation de la webcam ou de la caméra embarquée
-
-# variables communes ROF
-dh = 20                                  # valeurs autour de la teinte de référence qu'on va tracker
-sat_min = 60                             # saturation min d'une couleur à tracker (base hsv)
-val_min = 60                             # valeur min d'une couleur à tracker (base hsv)
-n_blur = 3                               # ordre du filtre gaussien (tracking)
-t_o = 5                                  # taille du noyau pour l'opening
-Amin = 400                               # aire en dessous de laquelle un contour n'est pas considéré pertinent
-Amax = 640*480                           # aire max. Les deux sont à adapter à l'altitude
-n_gauss = 5                              # ordre du filtre gaussien pour flouter le patron et l'objet à matcher
-seuil_certitude = 0.82                   # seuil de corrélation avec un patron au dessus duquel on considère la forme identique
-
-# définition de la flèche
-teinte_fleche = 0
-s_max_fleche = 0.8                       # solidité max
-r_min_fleche = .35                       # ratio petite dimension/grande dimension min
-r_max_fleche = .65                       # ratio petite dimension/grande dimension max
-pas_angle_fleche = 5                     # pas de test des orientations pour le template matching (NE PAS CHANGER)
-
-# définition de la croix
-teinte_croix = 35
-s_max_croix = 0.8                        # solidité max
-r_min_croix = .70                        # ratio petite dimension/grande dimension min
-r_max_croix = 1.                         # ratio petite dimension/grande dimension max
-pas_angle_croix = 10                     # pas de test des orientations pour le template matching (NE PAS CHANGER)
-    
-# définition du rectangle
-n_zone = 101                             # taille de la zone pour calculer le seuil adaptatif (doit être impair)
-v_moy = 25                               # valeur à enlever au seuil moyen
-s_min = 0.90                             # solidité min
-r_min = .4                               # ratio grande dimension/petite dimension min
-r_max = .6                               # ratio grande dimension/petite dimension max    
-seuil_aire = 0.9                         # rapport max entre l'aire d'un contour et l'aire du rectangle fitté 
-
-# caractéristiques associées au drone
-coords_drone = (48.7077, 2.1602)
-alt_drone = 10                           # altitude du drone en mètres
-cap_drone = 0                            # cap du drone (en degrés)
-orientation_cam = (0,0)                  # caméra à plat, devant = haut de l'image.
-
-# variables communes consolidation infos
-taille_mem = 4                           # nb d'infos gardées en mémoire (initialiser les listes associées au bon nb d'élts)
-seuil_sigma_pos = 2                      # seuil d'écart type en dessous duquel on considère avoir bien vu la position de l'objet
-seuil_sigma_cap = 5                      # idem pour les angles (cas d'une flèche)
-d_seuil = 3                              # distance en dessous de laquelle on considère que deux objets vus sont les mêmes
-
-
-# Initialisation du programme ----------------------------------------------------------------------------
 
 # Parcours déjà suivi (TODO : à modifier pour prendre en compte coords initiales drone)
 coords_decollage = (48.7076, 2.1603)
@@ -84,7 +51,7 @@ parcours = [ (coords_decollage, cap_decollage), (coords_1ere_fleche, cap_1ere_fl
 # divers
 font = cv2.FONT_HERSHEY_SIMPLEX          # police utilisée à l'image
 size_factor = 0.7                        # facteur de taille de la police
-K = cv2.getStructuringElement(cv2.MORPH_RECT,(t_o,t_o))          # noyau pour l'opening
+K = cv2.getStructuringElement(cv2.MORPH_RECT,(cf.t_o,cf.t_o))          # noyau pour l'opening
 bleu = (255,0,0)
 vert = (0,255,0)
 rouge = (0,0,255)
@@ -92,27 +59,27 @@ jaune = (0,255,255)
 blanc = (255,255,255)
 
 # instanciation de la classe flèche
-patron_fleche = cv2.imread('patron_fleche.png') # patron : vertical (orienté vers le haut, 50x50px)
-fleche = class_fleche.Fleche(patron_fleche, teinte_fleche, s_max_fleche, r_min_fleche, r_max_fleche, [], [], [], False)
-patrons_fleche = track.creePatrons(patron_fleche, pas_angle_fleche, n_gauss)
+patron_fleche = cv2.imread(cf.libpath + '/' + 'patron_fleche.png') # patron : vertical (orienté vers le haut, 50x50px)
+fleche = class_fleche.Fleche(patron_fleche, cf.teinte_fleche, cf.s_max_fleche, cf.r_min_fleche, cf.r_max_fleche, [], [], [], False)
+patrons_fleche = track.creePatrons(patron_fleche, cf.pas_angle_fleche, cf.n_gauss)
 liste_coords_fleche = [[],[]]
 liste_caps_fleche = [[], []]
-for i in range(taille_mem-2): liste_caps_fleche.append([]); liste_coords_fleche.append([])
+for i in range(cf.taille_mem-2): liste_caps_fleche.append([]); liste_coords_fleche.append([])
 
 # instanciation de la classe croix
-patron_croix = cv2.imread('patron_croix.png')   # patron : en "+", 50x50px
-croix = class_croix.Croix(patron_croix, teinte_croix, s_max_croix, r_min_croix, r_max_croix, [], [], False)
-patrons_croix = track.creePatrons(patron_croix, pas_angle_croix, n_gauss)
+patron_croix = cv2.imread(cf.libpath + '/' + 'patron_croix.png')   # patron : en "+", 50x50px
+croix = class_croix.Croix(patron_croix, cf.teinte_croix, cf.s_max_croix, cf.r_min_croix, cf.r_max_croix, [], [], False)
+patrons_croix = track.creePatrons(patron_croix, cf.pas_angle_croix, cf.n_gauss)
 liste_coords_croix = [[],[]]
-for i in range(taille_mem-2): liste_coords_croix.append([])
+for i in range(cf.taille_mem-2): liste_coords_croix.append([])
 
 # instanciation de la classe rectangle
-rectangle = class_rect.Rectangle(s_min, r_min, r_max, [], [], False)
+rectangle = class_rect.Rectangle(cf.s_min, cf.r_min, cf.r_max, [], [], False)
 liste_coords_rectangle = [[],[]]
-for i in range(taille_mem-2): liste_coords_rectangle.append([])
+for i in range(cf.taille_mem-2): liste_coords_rectangle.append([])
 
 # lancement vidéo
-capture = track.initVideoFlow(is_cam_embarquee)   
+capture = track.initVideoFlow(cf.is_cam_embarquee)   
 
 
 # Boucle -------------------------------------------------------------------------------------------------
@@ -125,17 +92,17 @@ while(True):
     coords_drone, alt_drone, cap_drone = bibsys.unwrap_args_rof(data)
 
     # Lecture vidéo
-    frame = track.getImage(is_cam_embarquee, capture)
+    frame = track.getImage(cf.is_cam_embarquee, capture)
    
     # Détection objets
-    fleche.detecteFleche(frame, dh, n_blur, K, Amin, Amax, patrons_fleche, pas_angle_fleche, seuil_certitude, sat_min, val_min, n_gauss)
-    croix.detecteCroix(frame, dh, n_blur, K, Amin, Amax, patrons_croix, pas_angle_croix, (seuil_certitude-0.05), sat_min, val_min, n_gauss)
-    rectangle.detecteRectangle(frame, n_blur, K, Amin, Amax, seuil_certitude, seuil_aire, n_zone, v_moy)
+    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude, cf.sat_min, cf.val_min, cf.n_gauss)
+    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, (cf.seuil_certitude-0.05), cf.sat_min, cf.val_min, cf.n_gauss)
+    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_certitude, cf.seuil_aire, cf.n_zone, cf.v_moy)
 
     # validation détection et consolidation infos
-    donnees_fleche = loc.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, taille_mem, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
-    donnees_croix = loc.analyseReconnaissanceObjet(croix, liste_coords_croix, taille_mem, seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
-    donnees_rectangle = loc.analyseReconnaissanceObjet(rectangle, liste_coords_rectangle, taille_mem, seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
+    donnees_fleche = loc.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, cf.taille_mem, cf.seuil_sigma_pos, cf.seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
+    donnees_croix = loc.analyseReconnaissanceObjet(croix, liste_coords_croix, cf.taille_mem, cf.seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
+    donnees_rectangle = loc.analyseReconnaissanceObjet(rectangle, liste_coords_rectangle, cf.taille_mem, cf.seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
     
     # affichage validation objets
     if donnees_fleche[0]:          # si la flèche a été validée
@@ -146,34 +113,45 @@ while(True):
         cv2.putText(frame, 'rectangle valide', (20,90), font, size_factor, blanc, 2, cv2.LINE_AA)
 
     # vérification si objets pas encore vus, choix du plus pertinent (si plusieurs valides en même temps à l'image)
-    parcours, donnees_objet_discrimine = loc.discrimineObjetsValides(donnees_fleche, donnees_croix, donnees_rectangle, parcours, d_seuil, coords_drone)
+    # si nouvel objet détecté : ajout au parcours
+    parcours, donnees_objet_discrimine = loc.discrimineObjetsValides(donnees_fleche, donnees_croix, donnees_rectangle, parcours, cf.d_seuil, coords_drone)
     
-    # résultat de l'algo
+    # "décompactage" des résultat de l'algo
     type_objet, coords, incertitude_coords, cap, incertitude_cap = donnees_objet_discrimine
-    
-    # si on a effectivement vu un nouvel objet, affichage du nouveau point sur le parcours
-#    if type_objet != 'none':        
-#        print('objet ajoute au parcours : ' + type_objet )
-#        print parcours[-1]
     
     # Affichage flux vidéo
     cv2.imshow('frame', frame)
     
-    # envoi arguments au script maître
-    output = bibsys.wrap_output_rof(type_objet, coords, incertitude_coords, cap, incertitude_cap)
+    # détection interactions utilisateur (codé ici car pratique avec opencv)
+    k = cv2.waitKey(10) & 0xFF
+    user_input = ''
+    # début mission
+    if k == ord('s'):
+       user_input = 'start'
+    # arrêt mission
+    if k == ord('a'):
+       user_input = 'abort'
+    # arrêt hard mission
+    if k == ord('e'):
+       user_input = 'emergency'
+    # fin du programme
+    if k == ord('q'):
+       user_input = 'quit'
+    
+    # communication avec le script maitre
+    # si pas d'appui sur une touche : déroulement normal (objet à "none" si on n'a rien vu)
+    if user_input == '':
+      output = bibsys.wrap_output_rof(type_objet, coords, incertitude_coords, cap, incertitude_cap)
+    # sinon : on transmet le code de l'action
+    else:
+      output = user_input
+    
     sys.stdout.write(output + "\n")
     sys.stdout.flush()
    
-    # Condition de fin de la boucle
-    k = cv2.waitKey(10) & 0xFF
-    if k == ord('q'):
-       break
 
 
 # Fin de la boucle ----------------------------------------------------------------------------------------------
 
-
-# arrêt du script
-track.endVideoFlow(is_cam_embarquee, capture)
 
 

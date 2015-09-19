@@ -18,12 +18,14 @@ Created on Fri Feb 20 16:37:13 2015
 
 import cv2
 import numpy as np
-import BibliTracking as track
+import sys
 
 
 # Définition des variables, initialisation du programme -------------------------------------------------
 
-is_cam_embarquee = True                     # utilisation de la webcam ou de la caméra embarquée
+# emplacement du fichier de configuration
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+
 
 # variables réglables
 trackbar_activated = True                   # active la barre pour réglage manuel de h_cible
@@ -37,14 +39,24 @@ aire_min = 400                              # aire en dessous de laquelle un con
 aire_max = 10000                            # aire max. Les deux sont à adapter à l'altitude
                                             # avec ces valeurs détecte le modèle de flèche entre 20 et 50cm environ
 
-
 # autres variables (définies principalement à partir des var précédentes)
 font = cv2.FONT_HERSHEY_SIMPLEX
 lower_blue = np.array([h_cible-marge_h,100,100])                         # define range of blue color in HSV
 upper_blue = np.array([h_cible+marge_h,255,255]) 
 
+
+# Initialisation du programme --------------------------------------------------
+
+# importe la configuration
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe les biblis perso
+sys.path.append(cf.libpath)
+import BibliTracking as track
+
 # lancement vidéo
-capture = track.initVideoFlow(is_cam_embarquee)
+capture = track.initVideoFlow(cf.is_cam_embarquee)
 
 # initialisation trackbars
 def nothing(x): pass
@@ -65,7 +77,7 @@ while(True):
 
         # Lecture vidéo -------------------------------------------------------
 
-    frame = track.getImage(is_cam_embarquee, capture)
+    frame = track.getImage(cf.is_cam_embarquee, capture)
    
    
         # Get current positions of trackbar -----------------------------------
@@ -98,6 +110,6 @@ while(True):
 
 
 # fin du script
-track.endVideoFlow(is_cam_embarquee, capture)
+track.endVideoFlow(cf.is_cam_embarquee, capture)
 
 

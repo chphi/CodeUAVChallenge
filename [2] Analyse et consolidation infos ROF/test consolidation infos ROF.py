@@ -15,26 +15,32 @@ compte l'intensité des vibrations qui font bouger le centre de l'objet (en pixe
 
 # TODO : vérifier ce qu'il se passe dans le cas où on ne voit pas de flèche (listes vides)
 
-import BibliLocalisation as loc
-import Fleche
-
-
+import sys
 
 # Variables --------------------------------------------------------------------------------------------------
 
-  # Variables réglables
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
 
 seuil_sigma_pos = 2                     # seuil d'écart type en dessous duquel on considère avoir bien vu la position de l'objet
 seuil_sigma_cap = 5                     # idem pour les angles (cas d'une flèche)
 taille_memoire = 3                      # nb d'infos gardées en mémoire (initialiser les listes associées au bon nb d'élts)
 
-  # Variables d'entrée
+# Initialisations --------------------------------------------------------------
+
+# importe le fichier de configuration des scripts
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe les biblis persos
+sys.path.append(cf.libpath)
+import BibliLocalisation as loc
+import Fleche
 
 coords_drone = (48.7077, 2.1602)
 alt_drone = 10                          # altitude du drone en mètres
 cap_drone = 0                           # cap du drone (en degrés)
 orientation_cam = (0,0)                 # caméra à plat, devant = haut de l'image.
-# rappel : l'image fait 480x640px (lignes puis colonnes)
+# rappel : l'image de la webcam fait 480x640px (lignes puis colonnes)
 position_fleche = (240, 320)            # position fictive d'un objet sur une image filmée à partir du drone (pour test)
 angle_fleche = 0                        # angle de la flèche fictive à l'écran par rapport à la verticale de l'image, en degrés
 fleche = Fleche.Fleche([], 0, 0.8, .35, .65, [], [], [], False)

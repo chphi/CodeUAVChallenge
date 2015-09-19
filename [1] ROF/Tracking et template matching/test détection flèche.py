@@ -18,20 +18,18 @@ affiche tous les contours en rouge, les contours pertinents en bleu, et les flè
 """
 
 
-
+import sys
 import cv2
 import numpy as np
-import BibliTracking as track
-#from scipy import ndimage
 
 
 # Définition des variables, initialisation du programme -------------------------------------------------
 
-is_cam_embarquee = True                  # utilisation de la webcam ou de la caméra embarquée
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+
+is_cam_embarquee = False                  # utilisation de la webcam ou de la caméra embarquée
 
 # variables réglables
-patron = cv2.imread('patron_fleche.png') # patron : vertical (orienté vers le haut)
-w_p, h_p = np.shape(patron[:,:,1])
 taille_patron = 45                       # taille de la flèche dans le patron
 h_cible = 0                              # teinte à tracker
 marge_h = 20                             # valeurs autour de la teinte de référence qu'on va tracker
@@ -57,10 +55,23 @@ lower_blue = np.array([h_cible-marge_h,40,40])              # define range of bl
 upper_blue = np.array([h_cible+marge_h,255,255]) 
 range_angles = np.arange(-max_angle,max_angle+1,pas_angle)    # angles à tester autour de angle_probable
 range_sizes = 1 + np.arange(-max_size, max_size, pas_size)    # tailles à tester autour de taille_probable
+
+
+# Initialisations --------------------------------------------------------------
+
+# importe la configuration
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe biblis persos
+sys.path.append(cf.libpath)
+import BibliTracking as track
+
+# création des patrons
+patron = cv2.imread(cf.libpath + '/' + 'patron_fleche.png') # patron : vertical (orienté vers le haut)
+w_p, h_p = np.shape(patron[:,:,1])
 patron = cv2.cvtColor(patron, cv2.COLOR_BGR2GRAY)
 patron = cv2.blur(patron,(n_gauss,n_gauss))
-
-# initialisations
 angle_fleche = -1
 pos_fleche = -1,-1
 patrons = np.zeros((h_p,w_p, np.int0(360/5)), 'uint8')      # initialisation du tableau des patrons orientés

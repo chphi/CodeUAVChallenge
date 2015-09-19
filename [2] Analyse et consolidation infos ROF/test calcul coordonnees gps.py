@@ -16,11 +16,12 @@ congruence dans la recherche du parcours de liste à écart-type minimal
 
 """
 
-# import numpy as np
-import BibliLocalisation as loc
+import sys
 
 
-# Variables -------------------------------------------------------------------
+# Variables --------------------------------------------------------------------
+
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
 
 coords_drone = (48.7077, 2.1602)
 altitude_drone = 10                    # altitude du drone en mètres
@@ -32,7 +33,18 @@ position_objet = (320, 40)             # position fictive d'un objet sur une ima
 angle_fleche = 30                      # angle de la flèche fictive à l'écran par rapport à la verticale de l'image, en degrés (orienté sens horaire)
 
 
-# Utilisation sur un exemple : détection d'une flèche -------------------------
+# Initialisations --------------------------------------------------------------
+
+# importe le fichier de configuration des scripts
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe les biblis persos
+sys.path.append(cf.libpath)
+import BibliLocalisation as loc
+
+
+# Utilisation sur un exemple : détection d'une flèche --------------------------
 
 pos_relative_fleche = loc.posPixToPosRelativeDrone(position_objet, orientation_camera, altitude_drone)
 coords_fleche = loc.coordsGPSobjet(coords_drone, cap_drone, altitude_drone, position_objet, orientation_camera)

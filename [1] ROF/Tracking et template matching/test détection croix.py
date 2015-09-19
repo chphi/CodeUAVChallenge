@@ -3,26 +3,28 @@
 Created on Fri Feb 20 16:37:13 2015
 
 @author: Charles
+
+TODO : mettre à jour en prenant les variables dans "conf_drone"
+
+syntaxe pour open cv 3.0.0
+
+On fait un template matching sur les zones d'intérêt (tracking couleur et filtrage des contours)
+
+affiche tous les contours en rouge, les contours pertinents en bleu, et les croix en vert.
 """
 
-# syntaxe pour open cv 3.0.0
-
-# On fait un template matching sur les zones d'intérêt (tracking couleur et filtrage des contours)
-
-# affiche tous les contours en rouge, les contours pertinents en bleu, et les flèches en vert.
-
+import sys
 import cv2
 import numpy as np
-import BibliTracking as track
 
 
 # Définition des variables, initialisation du programme -------------------------------------------------
 
-is_cam_embarquee = False                  # utilisation de la webcam ou de la caméra embarquée
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+
+is_cam_embarquee = False                 # utilisation de la webcam ou de la caméra embarquée
 
 # variables réglables
-patron = cv2.imread('patron_croix.png')  # patron : vertical (orienté vers le haut)
-w_p, h_p = np.shape(patron[:,:,1])
 h_cible = 35                             # à adapter à chaque fois qu'une flèche est détectée
 marge_h = 20                             # valeurs autour de la teinte de référence qu'on va tracker
 t_o = 5                                  # taille du noyau pour l'opening
@@ -40,10 +42,23 @@ seuil_certitude = 0.75                   # seuil de corrélation au dessus duque
 # autres variables (définies principalement à partir des var précédentes)
 lower_blue = np.array([h_cible-marge_h,50,50])            # define range of color in HSV
 upper_blue = np.array([h_cible+marge_h,255,255]) 
+
+# Initialisations --------------------------------------------------------------
+
+# importe la configuration
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe biblis persos
+sys.path.append(cf.libpath)
+import BibliTracking as track
+
+
+# init patron
+patron = cv2.imread(cf.libpath + '/' + 'patron_croix.png')  # patron : vertical (orienté vers le haut)
+w_p, h_p = np.shape(patron[:,:,1])
 patron = cv2.cvtColor(patron, cv2.COLOR_BGR2GRAY)
 patron = cv2.blur(patron,(n_gauss,n_gauss))
-
-# initialisations
 all_angles = np.arange(0,360, pas_angle)                       # initialisation de tous les angles
 patrons = np.zeros((w_p,h_p, np.int0(360/pas_angle)), 'uint8') # initialisation du tableau des patrons orientés
 for angle in all_angles:                                       # remplissage du tableau

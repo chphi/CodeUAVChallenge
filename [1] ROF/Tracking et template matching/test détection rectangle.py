@@ -9,15 +9,16 @@ Syntaxe pour open cv 3.0.0
 """
 
 
-
+import sys
 import cv2
 import numpy as np
-import BibliTracking as track
 
 
 # Définition des variables, initialisation du programme -------------------------------------------------
 
-is_cam_embarquee = True
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+
+is_cam_embarquee = False
 
 # variables réglables
 n_zone = 71                              # taille de la zone considérée pour le seuil adaptatif
@@ -36,6 +37,17 @@ r_min = .4                               # ratio grande dimension/petite dimensi
 r_max = .6                               # ratio grande dimension/petite dimension max
 
 rectangle = []
+
+
+# Initialisations --------------------------------------------------------------
+
+# importe la configuration
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# importe biblis persos
+sys.path.append(cf.libpath)
+import BibliTracking as track
 
 # lancement vidéo
 capture = track.initVideoFlow(is_cam_embarquee)
