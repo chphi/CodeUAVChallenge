@@ -33,7 +33,8 @@ import conf_drone as cf
 
 # importe les biblis persos
 sys.path.append(cf.libpath)
-import BibliLocalisation as loc
+import BibliConsolidateTracking as constra
+import BibliNav as nav
 import Fleche
 
 coords_drone = (48.7077, 2.1602)
@@ -58,8 +59,8 @@ parcours = [ (coords_decollage, cap_decollage), (coords_1ere_fleche, cap_1ere_fl
   # Création fausse alerte
 
 position_fausse_alerte = (400, 600)
-position_relative_fa = loc.posPixToPosRelativeDrone(position_fausse_alerte, orientation_cam, alt_drone)
-coords_gps_fa = loc.coordsGPSobjet(coords_drone, cap_drone, alt_drone, position_fausse_alerte, orientation_cam)
+position_relative_fa = nav.posPixToPosRelativeDrone(position_fausse_alerte, orientation_cam, alt_drone)
+coords_gps_fa = nav.coordsGPSobjet(coords_drone, cap_drone, alt_drone, position_fausse_alerte, orientation_cam)
 angle_fausse_alerte = 35
 
   # Création des localisations vues à l'instant précédent
@@ -74,7 +75,7 @@ liste_caps = [ [-4], [-3, angle_fausse_alerte], [3] ]  # CAPS de la flèche sur 
 
   # Consolidation des infos en analysant une série de 3 images, moyennage et calcul des incertitudes
 
-resultat = loc.analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_memoire, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
+resultat = constra.analyseReconnaissanceFleche(fleche, liste_coords, liste_caps, taille_memoire, seuil_sigma_pos, seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
 fleche_validee, coords_fleche, sigma_pos, cap_fleche, sigma_cap = resultat
 
 # mémorise l'objet dans la liste des formes repérées (décrit le parcours déjà suivi)
@@ -88,8 +89,8 @@ parcours.append( (coords_fleche, cap_fleche) )
 # de commande du drone
 
 if fleche_validee:
-    coords_next_WP = loc.coordsNextWaypoint(coords_fleche, cap_fleche, 0)
-    sigma_next_WP = 15 * loc.sinus(sigma_cap) + sigma_pos
+    coords_next_WP = nav.coordsNextWaypoint(coords_fleche, cap_fleche)
+    sigma_next_WP = 15 * nav.sinus(sigma_cap) + sigma_pos
     
 
 

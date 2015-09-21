@@ -41,14 +41,14 @@ import conf_drone as cf
 
 # importe les biblis persos
 sys.path.append(cf.libpath)
-import BibliLocalisation as loc
+import BibliNav as nav
 
 
 # Utilisation sur un exemple : détection d'une flèche --------------------------
 
-pos_relative_fleche = loc.posPixToPosRelativeDrone(position_objet, orientation_camera, altitude_drone)
-coords_fleche = loc.coordsGPSobjet(coords_drone, cap_drone, altitude_drone, position_objet, orientation_camera)
-coords_next_waypoint = loc.coordsNextWaypoint(coords_fleche, cap_fleche)
+pos_relative_fleche = nav.posPixToPosRelativeDrone(position_objet, orientation_camera, altitude_drone)
+coords_fleche = nav.coordsGPSobjet(coords_drone, cap_drone, altitude_drone, position_objet, orientation_camera)
+coords_next_waypoint = nav.coordsNextWaypoint(coords_fleche, cap_fleche)
 
 # on peut tester le code en rentrant les coordonnées sur Mission Planner
 

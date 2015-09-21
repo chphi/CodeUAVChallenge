@@ -4,7 +4,7 @@ Created on Wed Apr 08 10:47:01 2015
 
 @author: Charles
 
-Ce script est une bibliothèque de fonctions servant à la détection d'objets basée sur le tracking de couleurs,
+Bibliothèque de fonctions servant à la détection d'objets basée sur le tracking de couleurs,
 des tests sur les contours des objets, et des tests de corrélation avec un "patron" (forme à détecter)
 
 Sommaire des fonctions :

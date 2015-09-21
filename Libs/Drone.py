@@ -25,7 +25,7 @@ import conf_drone as cf
 
 # importe les biblis persos
 sys.path.append(cf.libpath)
-import BibliLocalisation as loc
+import BibliNav as nav
 
 
 # Définition de la classe ------------------------------------------------------
@@ -88,7 +88,7 @@ class Drone(object):
     print('j\'y suis, j\'enregistre cette position comme étant la dernière connue')
     self.last_known_location = arrow_coords
     print( 'je calcule ma prochaine destination...' )
-    self.destination = loc.coordsNextWaypoint(arrow_coords, arrow_heading)
+    self.destination = nav.coordsNextWaypoint(arrow_coords, arrow_heading)
     print( 'je me dirige vers cette destination :' )
     self.go_to(self.destination, self.alt_consigne)
 
@@ -104,6 +104,7 @@ class Drone(object):
 
 
   def back_to_dest(self):
+    # reprend la route vers la dernière destination
     self.go_to(self.destination, cf.nav_alt)
 
 
@@ -115,24 +116,24 @@ class Drone(object):
   def decolle(self):
     # monte à la verticale
     self.set_altitude(cf.takeoff_alt)
-    # monte en avançant vers les 1ères coordonnées
+    # finit la montée en avançant vers les 1ères coordonnées
     print('je me dirige maintenant vers les 1ères coordonnées cibles :')
     self.go_to(self.destination, cf.nav_alt)
 
 
   def go_to(self, coords_cible, alt_cible) :
     # TODO : ne pas oublier de supprimer l'ancien WP cible avant d'en créer un autre
-    # va aux coordonnées et à l'altitude indiquées en ligne droite
+    # va aux coordonnées et à l'altitude indiquées, en ligne droite
     print( "go_to( " + str(coords_cible) + ", " + str(alt_cible) + " )" )
     # mémorise l'altitude d'arrivée demandée comme nouvelle altitude consigne
     self.set_alt_consigne(alt_cible)
     
 
   def recover(self) :
-    # retourne au dernier point connu
+    # retourne au dernier point connu (flèche)
     print('je retourne au dernier point connu : ' + str(self.last_known_location))
     self.go_to(self.last_known_location, cf.nav_alt)
-    # éventuellement : vérifier direction de la flèche (pour ça il faut l'enlever du parcours...)
+    # éventuellement : revérifier direction de la flèche (pour ça il faut l'enlever du parcours...)
     print('j\'y suis, maintenant je repars avec une altitude supérieure')
     self.set_altitude(self.alt_consigne + 5)
     self.go_to(self.destination, self.alt_consigne)
