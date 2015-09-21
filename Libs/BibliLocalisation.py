@@ -202,15 +202,13 @@ def coordsGPSobjet(coords_drone, cap_drone, altitude_drone, pos_objet_sur_image,
     return coords_cible_sur_ecran
 
 
-def coordsNextWaypoint(coords_fleche, angle_fleche, cap_drone):
+def coordsNextWaypoint(coords_fleche, cap_fleche):
     """
     à partir des coordonnées d'une flèche donne les coordonnées d'un waypoint 15m plus loin dans la direction de la flèche
     
     coords_fleche, angle_fleche, cap_drone -> coords_next_waypoint
     """
     (lat, longit) = coords_fleche
-    
-    cap_fleche = angleFlecheToCap(cap_drone, angle_fleche)
     
     (d_NS, d_EW) = posRelativeToPosNSEO(cap_fleche, (0, 15))  # prochain WP dans 15m en direction de la flèche vue
     
@@ -277,6 +275,7 @@ def filtreCaps(caps):
     
     return caps_coherents
         
+
 def filtreCoordonnees(localisations):
     """
     idem que la fonction précédente pour des tuples à la place des nombres : travaille séparément sur les 1ers et seconds élts

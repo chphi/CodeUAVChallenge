@@ -30,7 +30,7 @@ orientation_camera = (0,0)             # caméra à plat, devant = haut de l'ima
 
 # rappel : l'image fait env. 640x480px (webcam) ou 720x576 (embarqué) (col. puis lignes inversées : repère "windows")
 position_objet = (320, 40)             # position fictive d'un objet sur une image filmée à partir du drone (pour test)
-angle_fleche = 30                      # angle de la flèche fictive à l'écran par rapport à la verticale de l'image, en degrés (orienté sens horaire)
+cap_fleche = 30                        # cap de la flèche fictive à l'écran (suppose qu'on connaissait le cap du drone pour calculer ça)
 
 
 # Initialisations --------------------------------------------------------------
@@ -48,7 +48,7 @@ import BibliLocalisation as loc
 
 pos_relative_fleche = loc.posPixToPosRelativeDrone(position_objet, orientation_camera, altitude_drone)
 coords_fleche = loc.coordsGPSobjet(coords_drone, cap_drone, altitude_drone, position_objet, orientation_camera)
-coords_next_waypoint = loc.coordsNextWaypoint(coords_fleche, angle_fleche, cap_drone)
+coords_next_waypoint = loc.coordsNextWaypoint(coords_fleche, cap_fleche)
 
 # on peut tester le code en rentrant les coordonnées sur Mission Planner
 

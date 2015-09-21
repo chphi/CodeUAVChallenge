@@ -57,7 +57,17 @@ taille_mem = 4                           # nb d'infos gardées en mémoire (init
 seuil_sigma_pos = 2                      # seuil d'écart type en dessous duquel on considère avoir bien vu la position de l'objet
 seuil_sigma_cap = 5                      # idem pour les angles (cas d'une flèche)
 d_seuil = 3                              # distance en dessous de laquelle on considère que deux objets vus sont les mêmes
+dist_max = 15                            # distance max entre deux formes (si on dépasse cette distance et qu'on a rien vu : demi-tour)
 
+
+# Variables scriptage ----------------------------------------------------------
+
+dropping_time = 1                        # temps de largage de bombe (en secondes)
+max_alt = 20                             # altitude de consigne max autorisée (en mètres)
+landing_alt = 3                          # altitude à laquelle on se place au dessus de la zone d'atterro pour atterrissage vertical
+takeoff_alt = 5                          # alt à laquelle on décolle à la verticale avant de se déplacer (pour pouvoir voir les formes)
+nav_alt = 7                              # altitude par défaut pour la navigation
+dropping_alt = 2                         # altitude à laquelle on largue les bombes
 
 # Divers -----------------------------------------------------------------------
 
@@ -67,3 +77,6 @@ vert = (0,255,0)
 rouge = (0,0,255)
 jaune = (0,255,255)
 blanc = (255,255,255)
+
+
+
