@@ -35,7 +35,7 @@ import conf_drone as cf
 # importe les biblis persos
 sys.path.append(cf.libpath)
 import BibliTracking as track
-import BibliLocalisation as loc
+import BibliConsolidateTracking as constra
 import BibliSysteme as bibsys
 import Fleche as class_fleche
 import Croix as class_croix
@@ -95,14 +95,14 @@ while(True):
     frame = track.getImage(cf.is_cam_embarquee, capture)
    
     # Détection objets
-    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude, cf.sat_min, cf.val_min, cf.n_gauss)
-    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, (cf.seuil_certitude-0.05), cf.sat_min, cf.val_min, cf.n_gauss)
-    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_certitude, cf.seuil_aire, cf.n_zone, cf.v_moy)
+    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
+    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
+    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
 
     # validation détection et consolidation infos
-    donnees_fleche = loc.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, cf.taille_mem, cf.seuil_sigma_pos, cf.seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
-    donnees_croix = loc.analyseReconnaissanceObjet(croix, liste_coords_croix, cf.taille_mem, cf.seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
-    donnees_rectangle = loc.analyseReconnaissanceObjet(rectangle, liste_coords_rectangle, cf.taille_mem, cf.seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
+    donnees_fleche = constra.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, cf.taille_mem, cf.seuil_sigma_pos, cf.seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
+    donnees_croix = constra.analyseReconnaissanceObjet(croix, liste_coords_croix, cf.taille_mem, cf.seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
+    donnees_rectangle = constra.analyseReconnaissanceObjet(rectangle, liste_coords_rectangle, cf.taille_mem, cf.seuil_sigma_pos, coords_drone, cap_drone, alt_drone, orientation_cam)
     
     # affichage validation objets
     if donnees_fleche[0]:          # si la flèche a été validée
@@ -114,7 +114,7 @@ while(True):
 
     # vérification si objets pas encore vus, choix du plus pertinent (si plusieurs valides en même temps à l'image)
     # si nouvel objet détecté : ajout au parcours
-    parcours, donnees_objet_discrimine = loc.discrimineObjetsValides(donnees_fleche, donnees_croix, donnees_rectangle, parcours, cf.d_seuil, coords_drone)
+    parcours, donnees_objet_discrimine = constra.discrimineObjetsValides(donnees_fleche, donnees_croix, donnees_rectangle, parcours, cf.d_seuil, coords_drone)
     
     # "décompactage" des résultat de l'algo
     type_objet, coords, incertitude_coords, cap, incertitude_cap = donnees_objet_discrimine

@@ -50,12 +50,12 @@ vert = (0,255,0)
 rouge = (0,0,255)
 
 # instanciation de la classe flèche
-patron_fleche = cv2.imread('patron_fleche.png') # patron : vertical (orienté vers le haut, 50x50px)
+patron_fleche = cv2.imread(cf.libpath + '/' + 'patron_fleche.png') # patron : vertical (orienté vers le haut, 50x50px)
 fleche = class_fleche.Fleche(patron_fleche, cf.teinte_fleche, cf.s_max_fleche, cf.r_min_fleche, cf.r_max_fleche, [], [], [], False)
 patrons_fleche = track.creePatrons(patron_fleche, cf.pas_angle_fleche, cf.n_gauss)
 
 # instanciation de la classe croix
-patron_croix = cv2.imread('patron_croix.png')   # patron : en "+", 50x50px
+patron_croix = cv2.imread(cf.libpath + '/' + 'patron_croix.png')   # patron : en "+", 50x50px
 croix = class_croix.Croix(patron_croix, cf.teinte_croix, cf.s_max_croix, cf.r_min_croix, cf.r_max_croix, [], [], False)
 patrons_croix = track.creePatrons(patron_croix, cf.pas_angle_croix, cf.n_gauss)
 
@@ -74,9 +74,9 @@ while(True):
   frame = track.getImage(cf.is_cam_embarquee, capture)
  
   # Détection objets
-  fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude, cf.sat_min, cf.val_min, cf.n_gauss)
-  croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, (cf.seuil_certitude-0.05), cf.sat_min, cf.val_min, cf.n_gauss)
-  rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_certitude, cf.seuil_aire, cf.n_zone, cf.v_moy)
+  fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
+  croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
+  rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
 
   if fleche.estDetectee and len(fleche.position) == 1:
     texte = 'angle fleche = ' + str(fleche.angle[0]) + ' deg'

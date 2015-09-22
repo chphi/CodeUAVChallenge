@@ -8,6 +8,8 @@ Created on Tue Apr 14 16:32:38 2015
 import cv2
 import BibliTracking as track
 
+
+
 class Rectangle:
     
     def __init__(self, s_min, r_min, r_max, position, aire, est_detecte):
@@ -19,7 +21,7 @@ class Rectangle:
         self.estDetecte = est_detecte
        
        
-    def detecteRectangle(self, frame, n_blur, kernel, aire_min, aire_max, seuil_certitude, seuil_aire, n_zone, v_moy):
+    def detecteRectangle(self, frame, n_blur, kernel, aire_min, aire_max, seuil_aire, n_zone, v_moy, epsi_ratio):
         """
         détecte tous les rectangles d'une image aux caractéristiques précisées dans le constructeur de classe.
         
@@ -38,24 +40,32 @@ class Rectangle:
         # Calcul des contours
         _, contours, hierarchy = cv2.findContours(opening.copy(), cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
         
-        # filtrage des contours pertinents
-        rect_probables = track.trouveObjetsProbables(opening, aire_min, aire_max, self.sMin, 1, self.rMin, self.rMax)
+        # 1ère passe : filtrage des contours pertinents (aire, solidité, ratio de longueurs)
+        cnt_pertinents = track.trouveObjetsProbables(opening, aire_min, aire_max, self.sMin, 1, self.rMin, self.rMax)
         
-        for cnt in rect_probables:
-            # fitte un rectangle
+        # 2ème passe : fittage de rectangle (si on le fait après l'approx tout ressemble à un rectangle)        
+        rect_probables = []
+        for cnt in cnt_pertinents:
+           # fitte un rectangle
             rect = cv2.minAreaRect(cnt)
             # calcule l'aire du rectangle fitté
             aire_rect = rect[1][0] * rect[1][1]
             # calcule l'aire du contour trouvé
             M = cv2.moments(cnt)
             aire_cnt = M['m00'] 
-            
-            if aire_cnt/aire_rect > seuil_aire:    
-            
-                cv2.drawContours(frame, [cnt], -1, (255,255,255), 1)
+            if aire_cnt/aire_rect > seuil_aire:
+               rect_probables.append(cnt)
+#               cv2.drawContours(frame, [cnt], -1, (255, 0, 0), 1)        
+      
+        # 3ème passe : on approxime les contours restants et on ne garde que ceux à 4 coins
+        for cnt in rect_probables:
+          epsilon = epsi_ratio*cv2.arcLength(cnt,True)
+          approx = cv2.approxPolyDP(cnt,epsilon,True)
+          if len(approx) == 4:   
+                M = cv2.moments(approx)
+                cv2.drawContours(frame, [approx], -1, (255,255,255), 2)
                 cx, cy = int(M['m10']/M['m00']) , int(M['m01']/M['m00'])
                 cv2.circle(frame, (cx,cy), 1, (255,255,255), 3)
-                
                 self.position.append((cx, cy))
                 self.aire.append(M['m00'])
                 self.estDetecte = True

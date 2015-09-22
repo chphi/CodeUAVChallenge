@@ -56,11 +56,11 @@ class Drone(object):
     self.destination = initial_coords
     
     # initialise la machine à états
-    self.machine = Machine(model=self, states=Drone.states, initial='standby', ignore_invalid_triggers=True)
+    self.machine = Machine(model=self, states=Drone.states, initial='standby', ignore_invalid_triggers=cf.ignore_invalid_triggers)
 
     # add transition :           trigger               source                          dest
     self.machine.add_transition('erreur'            , '*'                           , 'erreur'       , after='shutdown')
-    self.machine.add_transition('take_off_order'    , 'standby'                     , 'avance'       , before='decolle')
+    self.machine.add_transition('take_off_order'    , 'standby'                     , 'avance'       , after='decolle')
     self.machine.add_transition('landing_detected'  , ['avance', 'dropping_load']   , 'landed'       , before='land')
     self.machine.add_transition('landing_detected'  , 'perdu'                       , 'landed'       , before='land')
     self.machine.add_transition('arrow_detected'    , ['standby', 'perdu', 'avance'], 'avance'       , after='follow_arrow')
@@ -78,6 +78,7 @@ class Drone(object):
   def set_altitude(self, target_alti):
     self.set_alt_consigne(target_alti)
     print('je monte/descends verticalement à ' + str(self.alt_consigne) + 'm d\'altitude')
+    sys.stdout.flush()
 
 
   def follow_arrow(self, arrow_coords, arrow_heading) :
@@ -91,27 +92,32 @@ class Drone(object):
     self.destination = nav.coordsNextWaypoint(arrow_coords, arrow_heading)
     print( 'je me dirige vers cette destination :' )
     self.go_to(self.destination, self.alt_consigne)
-
+    sys.stdout.flush()
 
   def drop_load(self, cross_coords):
     print( 'je vais au dessus de la croix : ' + str(cross_coords) )
     self.go_to(cross_coords, cf.dropping_alt)
     print('je largue la charge')
+    sys.stdout.flush()
     # attend le largage de la charge
     time.sleep(cf.dropping_time)
-    print('charge larguée, je reprends ma route')
+    print('charge larguée')
+    sys.stdout.flush() 
+    # remonte quand la charge est larguée
+    self.set_altitude(cf.takeoff_alt)
+    # repart vers la précédente destination  
     self.load_down()
-
 
   def back_to_dest(self):
     # reprend la route vers la dernière destination
+    print('je reprends la route vers ma dernière destination')
     self.go_to(self.destination, cf.nav_alt)
-
+    sys.stdout.flush()
 
   def shutdown(self):
-    # atterrit sans délai, désarme les moteurs
+    # arrête les moteurs puis les désarme
     print "shutdown!"
-        
+    sys.stdout.flush()
   
   def decolle(self):
     # monte à la verticale
@@ -119,7 +125,7 @@ class Drone(object):
     # finit la montée en avançant vers les 1ères coordonnées
     print('je me dirige maintenant vers les 1ères coordonnées cibles :')
     self.go_to(self.destination, cf.nav_alt)
-
+    sys.stdout.flush()
 
   def go_to(self, coords_cible, alt_cible) :
     # TODO : ne pas oublier de supprimer l'ancien WP cible avant d'en créer un autre
@@ -127,7 +133,7 @@ class Drone(object):
     print( "go_to( " + str(coords_cible) + ", " + str(alt_cible) + " )" )
     # mémorise l'altitude d'arrivée demandée comme nouvelle altitude consigne
     self.set_alt_consigne(alt_cible)
-    
+    sys.stdout.flush()
 
   def recover(self) :
     # retourne au dernier point connu (flèche)
@@ -137,7 +143,7 @@ class Drone(object):
     print('j\'y suis, maintenant je repars avec une altitude supérieure')
     self.set_altitude(self.alt_consigne + 5)
     self.go_to(self.destination, self.alt_consigne)
-
+    sys.stdout.flush()
 
   def land(self, landing_coords):
     # va à la zone d'atterrissage et atterrit à la verticale  
@@ -145,14 +151,26 @@ class Drone(object):
     # éventuellement: commence déjà à descendre :
     self.go_to(landing_coords, cf.landing_alt)
     print('j\'y suis, j\'atterris à la verticale')
+    sys.stdout.flush()
+  
+  def return_to_launch(self):
+    print('je retourne à la zone de décollage')
+    sys.stdout.flush()
     
-    
-#   def update_status()
+  def update_status(self, coords_drone, cap_drone, alt_drone, rof_data):
 #     effectue la transition appropriée à la situation, en fonction des données à disposition.
-        
-#   def warm_up()
-#     initialise le drone, arme les moteurs quand il est prêt, stocke les coordonnées de départ
-
+    type_objet, coords, incertitude_coords, cap, incertitude_cap = rof_data
+    if ( type_objet == 'none'):
+      d = nav.distance(coords_drone, self.last_known_location)
+      if ( d > cf.dist_max ):
+        self.is_lost()
+    if ( type_objet == 'fleche'):
+      self.arrow_detected(coords, cap)
+    if ( type_objet == 'croix' ):
+      self.cross_detected(coords)
+    if ( type_objet == 'rectangle' ):      
+      self.landing_detected(coords)
+     
 
 
 

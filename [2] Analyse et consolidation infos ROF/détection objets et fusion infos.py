@@ -88,9 +88,9 @@ while(True):
     frame = track.getImage(cf.is_cam_embarquee, capture)
    
     # Détection objets
-    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude, cf.sat_min, cf.val_min, cf.n_gauss)
-    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, (cf.seuil_certitude-0.05), cf.sat_min, cf.val_min, cf.n_gauss)
-    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_certitude, cf.seuil_aire, cf.n_zone, cf.v_moy)
+    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
+    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
+    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
 
     # validation détection et consolidation infos
     donnees_fleche = constra.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, cf.taille_mem, cf.seuil_sigma_pos, cf.seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)

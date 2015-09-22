@@ -55,7 +55,7 @@ class Croix:
                 croix_detecte, _ = track.matchePatrons(zat_normalisee, indices_patrons_a_tester, patrons, seuil_certitude, n_gauss)            
                 
                 if croix_detecte:
-                    cv2.drawContours(frame, [cnt], -1, (0,255,255), 1)
+                    cv2.drawContours(frame, [cnt], -1, (0,255,255), 2)
                     cv2.circle(frame,(x,y), 3, (0,255,255), -1)
                     self.position.append((x,y))
                     self.taille.append(taille_approx)

@@ -90,7 +90,7 @@ while(True):
   elif data == 'abort':
      print(data) # lancer la procédure de "return to launch", quand terminé : arrêter la vidéo, l'automate etc...
   elif data == 'emergency':
-     print(data) # atterrir sur place sans délai (override l'ordre "abort" s'il a été donné avant)
+     print(data) # extinction des moteurs (override l'ordre "abort" s'il a été donné avant)
   elif data == 'quit':
      print('ordre utilisateur : <quit>')
      ret = quit_subprocess(p, drone_status) # quitte le programme (si le drone est désarmé)
@@ -101,13 +101,14 @@ while(True):
   #☺ si pas d'action utilisateur :     
   else:
     type_objet, coords, incertitude_coords, cap, incertitude_cap = bibsys.unwrap_output_rof(data)    
-    # si objet détecté : affiche kes données
+    # si objet détecté : affiche les données
     if(type_objet != 'none'):
       print(data)
-      print("temps écoulé : " + str(time.time() - t0))
+    else:
+      print(str(time.time() - t0))
     
-  # stop au bout de 5 secondes
-  if (time.time() - t0 > 30):
+  # stop au bout de N secondes
+  if (time.time() - t0 > cf.max_time):
     break
 
 

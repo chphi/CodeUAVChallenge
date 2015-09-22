@@ -26,7 +26,7 @@ v_moy = 40                               # valeur à enlever au seuil moyen
 t_o = 5                                  # taille du noyau pour l'opening
 n_gauss = 5                              # ordre du filtre gaussien pour flouter le patron
 kernel = np.ones((t_o,t_o),np.uint8)     # noyau pour l'opening
-seuil_aire = 0.9                         # rapport max entre l'aire d'un contour et l'aire du rectangle fitté 
+seuil_aire = 0.95                        # rapport max entre l'aire d'un contour et l'aire du rectangle fitté 
 
 # définition du rectangle noir
 valeur_cible = 0                         
@@ -72,34 +72,39 @@ while(True):
     
     # Tracking du noir
     frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    frame2 = cv2.adaptiveThreshold(frame2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, n_zone, v_moy)
-#    frame2 = cv2.GaussianBlur(frame2,(n_gauss,n_gauss),0)  # ajoute bcp de bruit
-    frame2 = cv2.morphologyEx(frame2, cv2.MORPH_OPEN, kernel)
-
-    # Calcul des contours
-    _, contours, hierarchy = cv2.findContours(frame2.copy(), cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(frame,contours, -1, (0,127,255), 1)
+    th = cv2.adaptiveThreshold(frame2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, n_zone,v_moy)
+    opening = cv2.morphologyEx(th, cv2.MORPH_OPEN, kernel)
     
-    # filtrage des contours pertinents
-    rect_probables = track.trouveObjetsProbables(frame2, aire_min, aire_max, s_min, 1, r_min, r_max)
-    for cnt in rect_probables:
-        cv2.drawContours(frame, [cnt], -1, (0,255,0), 2)      # en vert  
-        # fitte un rectangle
+    # Calcul des contours
+    _, contours, hierarchy = cv2.findContours(opening.copy(), cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
+    
+    # 1ère passe : filtrage des contours pertinents (aire, solidité, ratio de longueurs)
+    cnt_pertinents = track.trouveObjetsProbables(opening, aire_min, aire_max, cf.s_min, 1, cf.r_min, cf.r_max)
+    
+    # 2ème passe : fittage de rectangle (si on le fait après l'approx tout ressemble à un rectangle)        
+    rect_probables = []
+    for cnt in cnt_pertinents:
+       # fitte un rectangle
         rect = cv2.minAreaRect(cnt)
         # calcule l'aire du rectangle fitté
         aire_rect = rect[1][0] * rect[1][1]
         # calcule l'aire du contour trouvé
         M = cv2.moments(cnt)
         aire_cnt = M['m00'] 
-        # si les aires sont suffisamment proches ( = contour très proche du rectangle en forme)
-        if aire_cnt/aire_rect > seuil_aire:        
-            box = cv2.boxPoints(rect)
-            box = np.int0(box)
-            cv2.drawContours(frame,[box],0,(0,0,255),3)
-            M = cv2.moments(cnt)
+        if aire_cnt/aire_rect > seuil_aire:
+           rect_probables.append(cnt)
+           cv2.drawContours(frame, [cnt], -1, (255, 0, 0), 1)        
+  
+    # 3ème passe : on approxime les contours restants et on ne garde que ceux à 4 coins
+    for cnt in rect_probables:
+      epsilon = cf.epsi_ratio*cv2.arcLength(cnt,True)
+      approx = cv2.approxPolyDP(cnt,epsilon,True)
+      if len(approx) == 4:   
+            M = cv2.moments(approx)
+            cv2.drawContours(frame, [approx], -1, (255,255,255), 2)
             cx, cy = int(M['m10']/M['m00']) , int(M['m01']/M['m00'])
             cv2.circle(frame, (cx,cy), 1, (255,255,255), 3)
-            rectangle = cnt
+
     
     # Affichage flux vidéo
     cv2.imshow('frame', frame)

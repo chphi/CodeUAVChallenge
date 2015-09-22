@@ -54,7 +54,7 @@ class Fleche:
                 fleche_detectee, angle_objet = track.matchePatrons(zat_normalisee, indices_patrons_a_tester, patrons, seuil_certitude, n_gauss)            
                 
                 if fleche_detectee:
-                    cv2.drawContours(frame, [cnt], -1, (0,0,255), 1)
+                    cv2.drawContours(frame, [cnt], -1, (0,0,255), 2)
                     cv2.circle(frame,centre_zone, 3, (0,0,255), -1)
                     self.angle.append(angle_objet)
                     self.position.append(centre_zone)
