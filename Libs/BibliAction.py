@@ -45,7 +45,7 @@ Sommaire des fonctions :
       -> Le drone décolle
 
   - land
-      -> Le drone attérit
+      -> Le drone atterrit
 
 """
 
