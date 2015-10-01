@@ -54,11 +54,22 @@ Sommaire des fonctions :
   
 """
 
+import sys
 import cv2
 import numpy as np
 from VideoCapture import Device
 
+# Définition des variables ----------------------------------------------------
 
+conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+    
+# Initialisation du programme -------------------------------------------------
+
+# importe la configuration
+sys.path.append(conf_path)
+import conf_drone as cf
+
+# Fonctions -------------------------------------------------------------------
 
 def initVideoFlow(is_cam_embarquee):
     """
@@ -67,18 +78,20 @@ def initVideoFlow(is_cam_embarquee):
     cv2.namedWindow('frame')
         
     if is_cam_embarquee:
+        print('caméra embarquée')
         try:
-           cap = Device(devnum=1, showVideoWindow=0)
+           cap = Device(devnum=cf.emb_cam_num, showVideoWindow=0)
         except Exception, e:
            print e
            cv2.destroyAllWindows()
     else:
+        print('caméra interne')
         try:  
-           cap = cv2.VideoCapture(0)
+           cap = Device(devnum=cf.webcam_num, showVideoWindow=0)
         except Exception, e:
            print e
            cv2.destroyAllWindows()
-        
+    sys.stdout.flush()
     return cap
     
 
@@ -87,12 +100,12 @@ def getImage(is_cam_embarquee, cap):
     Fait l'acquisition d'une image en différenciant le cas où on veut utiliser une cam embarquée ou la webcam du pc
     Rend une image au format BGR d'opencv
     """
-    if is_cam_embarquee:
-        im = cap.getImage()
-        arr = np.array(im)    
-        frame = cv2.cvtColor(arr, cv2.COLOR_BGR2RGB)
-    else:
-        _, frame = cap.read()
+#    if is_cam_embarquee:
+    im = cap.getImage()
+    arr = np.array(im)    
+    frame = cv2.cvtColor(arr, cv2.COLOR_BGR2RGB)
+#    else:
+#        _, frame = cap.read()
         
     return frame
     
@@ -101,10 +114,11 @@ def endVideoFlow(is_cam_embarquee, cap):
     """
     Arrête le flux vidéo et ferme la fenêtre d'affichage
     """
-    if not is_cam_embarquee:
-        cap.release()
-    else:
-        del cap
+#    if not is_cam_embarquee:
+#        cap.release()
+#    else:
+#        del cap
+    del cap
     cv2.destroyAllWindows()
     
 
@@ -133,8 +147,10 @@ def trackeTeinte(frame, h_cible, marge_h, n_blur, kernel, s_min, v_min):
             upper_color_2 = np.array([180, 255, 255])     
         frame_track_1 = cv2.inRange(frame_track, lower_color_1, upper_color_1)
         frame_track_2 = cv2.inRange(frame_track, lower_color_2, upper_color_2)
-        frame_track = cv2.add(frame_track_1, frame_track_2)   
-    frame_track = cv2.GaussianBlur(frame_track,(n_blur,n_blur),0)       # floute l'image (filtre gaussien)
+        frame_track = cv2.add(frame_track_1, frame_track_2) 
+    # test : filtre médian à la place du gaussien
+    frame_track = cv2.medianBlur(frame_track, n_blur, 0)
+#    frame_track = cv2.GaussianBlur(frame_track,(n_blur,n_blur),0)       # floute l'image (filtre gaussien)
     opening = cv2.morphologyEx(frame_track, cv2.MORPH_OPEN, kernel)     # fait une "ouverture" (réduit le bruit) 
     
     return opening
