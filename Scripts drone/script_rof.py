@@ -8,7 +8,9 @@ Script mettant en oeuvre la détection d'objets et consolidation infos pour la f
 
 syntaxe pour open cv 3.0.0
 
-détecte les flèches et les croix
+détecte les flèche, croix et rectangles
+
+NE PAS EXECTUER CE SCRIPT,  IL EST LANCE PAR "script_mp.py"
 """
 
 
@@ -43,10 +45,7 @@ import Rectangle as class_rect
 
 # Parcours déjà suivi (TODO : à modifier pour prendre en compte coords initiales drone)
 coords_decollage = (48.7076, 2.1603)
-cap_decollage = 0
-coords_1ere_fleche = (48.7077, 2.1603)
-cap_1ere_fleche = 170.5
-parcours = [ (coords_decollage, cap_decollage), (coords_1ere_fleche, cap_1ere_fleche) ]
+parcours = []
 
 # divers
 font = cv2.FONT_HERSHEY_SIMPLEX          # police utilisée à l'image
@@ -95,9 +94,9 @@ while(True):
     frame = track.getImage(cf.is_cam_embarquee, capture)
    
     # Détection objets
-    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
-    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
-    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
+    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin_fleche, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
+    croix.detecteCroix(frame, cf.n_zone_croix, cf.v_moy_croix, cf.n_blur, K, cf.Amin_croix, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
+    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin_rect, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
 
     # validation détection et consolidation infos
     donnees_fleche = constra.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, cf.taille_mem, cf.seuil_sigma_pos, cf.seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
