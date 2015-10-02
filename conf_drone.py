@@ -20,28 +20,33 @@ libpath = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChalleng
 
 # Variables ROF ------------------------------------------------------------------------
 
-is_cam_embarquee = False                 # utilisation de la webcam ou de la caméra embarquée
+is_cam_embarquee = True                   # utilisation de la webcam ou de la caméra embarquée
+emb_cam_num = 0                           # n° de device de la caméra du drone (tester pour chaque pc)
+webcam_num = 0                            # idem pour la webcam (à tester aussi)
 
 # variables communes ROF
-dh = 20                                  # valeurs autour de la teinte de référence qu'on va tracker
+dh = 30                                  # valeurs autour de la teinte de référence qu'on va tracker
 sat_min = 60                             # saturation min d'une couleur à tracker (base hsv)
-val_min = 80                             # valeur min d'une couleur à tracker (base hsv)
-n_blur = 1                               # ordre du filtre gaussien (tracking)
+val_min = 60                             # valeur min d'une couleur à tracker (base hsv)
+n_blur = 7                               # ordre du filtre gaussien (tracking)
 t_o = 5                                  # taille du noyau pour l'opening
-Amin = 400                               # aire en dessous de laquelle un contour n'est pas considéré pertinent
-Amax = 640*480                           # aire max. Les deux sont éventuellement à adapter à l'altitude
+Amax = 1000*1000                         # aire max. Les deux sont éventuellement à adapter à l'altitude
 n_gauss = 3                              # ordre du filtre gaussien pour flouter le patron et l'objet à matcher
 
 # définition de la flèche
+Amin_fleche = 1000                       # aire en dessous de laquelle un contour n'est pas considéré pertinent
 teinte_fleche = 0
 s_max_fleche = 0.8                       # solidité max
 r_min_fleche = .35                       # ratio petite dimension/grande dimension min
 r_max_fleche = .65                       # ratio petite dimension/grande dimension max
 pas_angle_fleche = 5                     # pas de test des orientations pour le template matching (peut buguer si modifié)
-seuil_certitude_fleche = 0.85            # seuil de corrélation avec un patron au dessus duquel on matche
+seuil_certitude_fleche = 0.80            # seuil de corrélation avec un patron au dessus duquel on matche
 
 # définition de la croix
+Amin_croix = 500 
 teinte_croix = 35
+n_zone_croix = 51                        # doit être impair
+v_moy_croix = -12
 s_max_croix = 0.8                        # solidité max
 r_min_croix = .70                        # ratio petite dimension/grande dimension min
 r_max_croix = 1.                         # ratio petite dimension/grande dimension max
@@ -49,12 +54,13 @@ pas_angle_croix = 10                     # pas de test des orientations pour le 
 seuil_certitude_croix = 0.75
     
 # définition du rectangle
-n_zone = 151                             # taille de la zone pour calculer le seuil adaptatif (doit être impair)
-v_moy = 15                               # valeur à enlever au seuil moyen
-s_min = 0.95                             # solidité min
+Amin_rect = 2000 
+n_zone = 135                             # taille de la zone pour calculer le seuil adaptatif (doit être impair)
+v_moy = 2                               # valeur à enlever au seuil moyen
+s_min = 0.7                             # solidité min
 r_min = .40                              # ratio grande dimension/petite dimension min
 r_max = .60                              # ratio grande dimension/petite dimension max    
-seuil_aire = 0.90                        # rapport max entre l'aire d'un contour et l'aire du rectangle fitté 
+seuil_aire = 0.80                        # rapport max entre l'aire d'un contour et l'aire du rectangle fitté 
 epsi_ratio = 0.05                        # longueur min de l'approx des contours, en rapport au périmètre d'un contour
 
 
