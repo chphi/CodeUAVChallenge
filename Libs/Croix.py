@@ -24,21 +24,27 @@ class Croix:
        
        
        
-    def detecteCroix(self, frame, marge_h, n_blur, kernel, aire_min, aire_max, patrons, pas_angle, seuil_certitude, s_min, v_min, n_gauss):
+    def detecteCroix(self, frame, n_zone, v_moy, n_blur, kernel, aire_min, aire_max, patrons, pas_angle, seuil_certitude, s_min, v_min, n_gauss):
         """
         détecte toutes les croix d'une image aux caractéristiques précisées dans le constructeur de classe.
         
         Si plusieurs croix repérées met leurs attributs sous forme de liste (liste des positions, des tailles)
         """
     
-        t, S, rm, rM = self.teinte, self.sMax, self.rMin, self.rMax
+        S, rm, rM = self.sMax, self.rMin, self.rMax
         croix_detecte = False     
         self.angle = -1
         self.position = []
         self.taille = []
         self.estDetecte = False
         
-        frame_trackee = track.trackeTeinte(frame, t, marge_h, n_blur, kernel, s_min, v_min)
+#        frame_trackee = track.trackeTeinte(frame, t, marge_h, n_blur, kernel, s_min, v_min)
+        frame_denoise = cv2.medianBlur(frame,n_blur)
+        frame_gray = cv2.cvtColor(frame_denoise, cv2.COLOR_BGR2GRAY)
+        th = cv2.adaptiveThreshold(frame_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, n_zone,v_moy)
+        frame_trackee = cv2.morphologyEx(th, cv2.MORPH_OPEN, kernel)
+#        cv2.imshow('frame trackee', frame_trackee)        
+        
         croix_probables = track.trouveObjetsProbables(frame_trackee.copy(), aire_min, aire_max, 0, S, rm, rM)
         
         for cnt in croix_probables:
