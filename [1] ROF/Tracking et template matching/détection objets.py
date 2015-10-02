@@ -27,6 +27,8 @@ import sys
 
 # Définition des variables -----------------------------------------------------------------------------
 
+#impath = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Images/Echantillon image croix.png'
+
 conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
     
 # Initialisation du programme ----------------------------------------------------------------------------
@@ -72,11 +74,12 @@ while(True):
 
   # Lecture vidéo
   frame = track.getImage(cf.is_cam_embarquee, capture)
+#  frame = cv2.imread(impath)
  
   # Détection objets
-  fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
-  croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
-  rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
+  fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin_fleche, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
+  croix.detecteCroix(frame, cf.n_zone_croix, cf.v_moy_croix, cf.n_blur, K, cf.Amin_croix, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
+  rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin_rect, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
 
   if fleche.estDetectee and len(fleche.position) == 1:
     texte = 'angle fleche = ' + str(fleche.angle[0]) + ' deg'
@@ -85,7 +88,7 @@ while(True):
    
   # Affichage flux vidéo
   cv2.imshow('frame', frame)
-   
+
   # Condition de fin de la boucle
   k = cv2.waitKey(10) & 0xFF
   if k == ord('q'):
@@ -96,6 +99,8 @@ while(True):
 
 
 # arrêt du script
-track.endVideoFlow(cf.is_cam_embarquee, capture)
+#track.endVideoFlow(cf.is_cam_embarquee, capture)
+del capture
+cv2.destroyAllWindows()
 
 
