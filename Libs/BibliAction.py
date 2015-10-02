@@ -19,245 +19,221 @@ Sommaire des fonctions :
 
   - droneArme
       -> Indique si le drone est armé ou pas
+
+  - armeDrone
+      -> Arme le drone
       
   - fonction1
-      -> arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
+      -> Arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
 
   - fonction2
-      -> arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
+      -> Arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
       
   - fonction3
-      -> arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
+      -> Arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
 
+  - warmUp
+      -> Arme le drone et essaie pendant timeOut secondes    
+          
   - bombe
-      -> largue la bombe
-  
-  - Croix_detectee
-      -> stabilise le drone au dessus de la croix, largue la bombe et attend 10s
-      
-  - Fleche_detectee
-      -> guide le drone vers le point suivant
+      -> Largue la bombe
+        
+  - set_new_wp
+      -> Défini un new Waypoint et supprime les autres
 
+  - takeOff
+      -> Le drone décolle
+
+  - land
+      -> Le drone atterrit
 
 """
 
-# import sys    Apparemment pas important
 import os
 import clr
 import time
 import sys
+clr.AddReference("MAVLink")
+import MAVLink
 
 sys.path.append(os.getcwd())
 
 import MissionPlanner
-# import *
-clr.AddReference("MissionPlanner.Utilities")                     # includes the Utilities class
-#import BibliLocalisation                                         # importe la bibliothèque de localisation
+clr.AddReference("MissionPlanner.Utilities")                                   # includes the Utilities class
 
 
-
-#import Script                                                    # A retirer, juste pour éviter les erreurs
-#import MAV                                                       # A retirer, juste pour éviter les erreurs
-#import cs                                                        # A retirer, juste pour éviter les erreurs
-
-def print_cwd():
-    print(os.getcwd())
 
 def droneArme():
     """
     Indique si le drone est armé
     """
     if (cs.armed == True): 
-        return "drone armé"                                       # Indique si le drone est armé
+        print "drone armé"                                                     # Indique si le drone est armé
+        return True
     else:
-        return "drone desarmé"                                    # Indique si le drone est désarmé
+        print "drone desarmé"                                                  # Indique si le drone est désarmé
+        return False
 
 
+def armeDrone(bool):
+    Script.ChangeMode("stabilize")
+    if bool == True:
+        MAV.doARM("true")
+    else:
+        MAV.doARM("false")
 
 def fonction1():
     """
     Arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
     """
+    # Armement des moteurs ----------------------------------------------------    
     print "début du script"
-    time.sleep(3)                                               # On attend 10s
-    MAV.doARM("true")                                            # on arme les moteurs
+
+    time.sleep(1)                                                              # On attend 10s
+    armeDrone(True)                                                            # On arme les moteurs
+    time.sleep(3)
+    droneArme()                                                                # On indique l'état du drone
+    time.sleep(5)
+    
+    # Desarmements des moteurs ------------------------------------------------
+    armeDrone(False)                                                           # On désarme les moteurs
+    time.sleep(12)
+    droneArme()                                                                # On indique l'état du drone
     time.sleep(1)
-    droneArme()                                                  # On indique l'état du drone
-    time.sleep(5)
     
-    MAV.doARM("false")                                           # On désarme les moteurs
-    time.sleep(5)
-    droneArme()                                                  # On indique l'état du drone
-    time.sleep(5)
-    
-    Script.ChangeMode("stabilize")
+    Script.ChangeMode("stabilize")                                             # On rend la main au pilote
     time.sleep(10)
     print "script terminé"
 
-"""
-Ici il semblerait qu'on puisse utiliser également "Script.WaitFor('ARMING MOTORS',30000)" je ne sais pas bien quelle est la différence...
-"""    
-    
-    
+   
 def fonction2(n, inputAlt):
     """
     Arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
     """
-    time.sleep(10)                                             # wait 10 seconds before starting
+    time.sleep(1)                                                              
     print 'Starting Mission'
-    Script.ChangeMode("Guided")                                # changes mode to "Guided"
-    print 'Guided Mode'
 
-    item = MissionPlanner.Utilities.Locationwp()               # creating waypoint
-    lat = cs.lat                                               # Latitude value
-    lng = cs.lng                                               # Longitude value
-    alt = inputAlt                                             # altitude value
-    MissionPlanner.Utilities.Locationwp.lat.SetValue(item,lat) # sets latitude
-    MissionPlanner.Utilities.Locationwp.lng.SetValue(item,lng) # sets longitude
-    MissionPlanner.Utilities.Locationwp.alt.SetValue(item,alt) # sets altitude
+    # Décollage ---------------------------------------------------------------
+    armeDrone()                                                                # On arme les moteurs
+    time.sleep(2)
+    droneArme()                                                                # Indique si le drone est armé 
+    Script.Sleep(3)
     
-
-
-    #Décollage
-    MAV.doARM("true")                                          # on arme les moteurs
+    decollage(inpuAlt)
     
-    droneArme()                                                # Indique si le drone est armé 
+    # Attente -----------------------------------------------------------------
+    time.sleep(n*1000)
     
-    MAV.setGuidedModeWP(item)                                  # tells UAV "go to" the set lat/long @ alt
-    
-    
-    #Pause
-    
-    time.sleep(10)
     print 'Mission Complete'
     
-    #MAV.setMode(RETURN_TO_LAUNCH)
-    Script.ChangeMode("RTL")                                   # Return to Launch point
+    # Atterrissage ------------------------------------------------------------
+    Script.ChangeMode("RTL")                                                   # Return to Launch point
     print 'Returning to Launch'
-    
-    #Atterrissage
-    
-    time.sleep(10)
-    Script.ChangeMode("LOITER")                                # switch to "LOITER" mode
-    print 'LOITERING'
-    time.sleep(10)
-    
-    #Desarmement des moteurs
-    MAV.doARM("false")                                         # On désarme les moteurs
-    time.sleep(5)
-    droneArme()                                                # Indique si le drone est désarmé
-    time.sleep(5)
-    
-    Script.ChangeMode("stabilize")                             # On rend lescommandes
-    time.sleep(10)
-    
+    time.sleep(2)
+    print 'Fin de la Mission'
     
 def fonction3(lat, lng, alt):
     """
     Arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
     """
-    time.sleep(10)                                             # wait 10 seconds before starting
+    time.sleep(10)                                                             
     print 'Starting Mission'
-    Script.ChangeMode("Guided")                                # changes mode to "Guided"
-    print 'Guided Mode'
 
-    item = MissionPlanner.Utilities.Locationwp()               # creating waypoint
-    MissionPlanner.Utilities.Locationwp.lat.SetValue(item,lat) # sets latitude
-    MissionPlanner.Utilities.Locationwp.lng.SetValue(item,lng) # sets longitude
-    MissionPlanner.Utilities.Locationwp.alt.SetValue(item,alt) # sets altitude
-    
 
-    #Décollage
-    MAV.doARM("true")                                          # on arme les moteurs
-    
-    droneArme()                                                # Indique si le drone est armé 
-    
-    MAV.setGuidedModeWP(item)                                  # tells UAV "go to" the set lat/long @ alt
-#    Script.WaitFor( ??? )                                     # On attend d'être arrivé sur le point
-    
-    #Pause
-    
-    time.sleep(10)
-    print 'Mission Complete'
+    #Décollage ----------------------------------------------------------------
+    armeDrone()                                                                # On arme les moteurs
+    time.sleep(3)
+    droneArme()                                                                # Indique si le drone est armé 
+    #Nouveau Waypoint ---------------------------------------------------------
+    set_new_wp(lat, lng, alt)                                                  # Nouveau WayPoint
+    time.sleep(1)
        
-    #Atterrissage
-    
-    time.sleep(10)
-    Script.ChangeMode("LOITER")                                # switch to "LOITER" mode
-    print 'LOITERING'
-    time.sleep(10)
-    
-    #Desarmement des moteurs
-    MAV.doARM("false")                                         # On désarme les moteurs
-    time.sleep(5)
-    droneArme()                                                # Indique si le drone est armé
-    time.sleep(5)
-    
-    Script.ChangeMode("stabilize")                             # On rend lescommandes
-    time.sleep(10)
+    #Atterrissage -------------------------------------------------------------
+    if (cs.wp_dist < 1):
+        Script.ChangeMode("LAND")                                              # On passe au mode "LAND"
+        print 'LAND'
     
 
 
+def warmUp():
+    """
+    Tente d'armer le drone pendant max_warmup_time secondes
+    """
+    
+    # Début -------------------------------------------------------------------
+    t0 = time.time()
+    time.sleep(1)
+    print 'début du script'
+    time.sleep(1)
+    
+    while time.time() - t0 < cf.max_warmup_time:
+        
+        MAV.doARM("true")
+        
+        time.sleep(2)
+        if droneArme():
+            return True
+    
+    print "Error : Drone non armé"
+    return False
+        
 
 
 def bombe(n):
     """
     Largue la bombe n (1 ou 2).
     """
-#    Script.SendRC(voir ce quil faut faire)                     # larguer les bombs
-    
+    if (n == '1'):
+        MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO, 11 ,2000, 0, 0, 0, 0, 0)   # On libère la bombe 1
+        time.sleep(3)
+        MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO, 11 ,1500, 0, 0, 0, 0, 0)   # On revient au centre
+        print 'Bomb1 away'
+    if (n == '2'):
+        MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO, 11 ,1000, 0, 0, 0, 0, 0)   # On libère la bombe 2
+        time.sleep(3)
+        MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO, 11 ,1500, 0, 0, 0, 0, 0)   # On revient au centre
+        print 'Bomb2 away'
 
-def Croix_detectee(coords_croix, n):
+    
+ 
+  
+
+
+
+def set_new_wp(lat, lng, alt):
     """
-    Stabilise le drône au dessus de la croix, descend de x mètre, largue la bombe n, et repart 15m plus loin dans la même direction.
+    Défini un nouveau WayPoint et s'y rend
     """
-    time.sleep(1)                                                # wait 1 seconds before starting
-    print 'Croix détectée'
-    Script.ChangeMode("Guided")                                  # changes mode to "Guided"
-    print 'Guided Mode'
-    item = MissionPlanner.Utilities.Locationwp()                 # creating waypoint
-    alt = cs.lat                                                 # altitude value
-    (lat, lng) = coords_croix                                    # latitude and longitude value
-    MissionPlanner.Utilities.Locationwp.lat.SetValue(item,lat)   # sets latitude
-    MissionPlanner.Utilities.Locationwp.lng.SetValue(item,lng)   # sets longitude
-    MissionPlanner.Utilities.Locationwp.alt.SetValue(item,alt)   # sets altitude
+    
+    item = MissionPlanner.Utilities.Locationwp()                               # Création du waypoint
+
+    MissionPlanner.Utilities.Locationwp.lat.SetValue(item,lat)                 # Sets latitude
+    MissionPlanner.Utilities.Locationwp.lng.SetValue(item,lng)                 # Sets longitude
+    MissionPlanner.Utilities.Locationwp.alt.SetValue(item,alt)                 # Sets altitude
     print 'WP set'
-    MAV.setGuidedModeWP(item)                                    # tells UAV "go to" the set lat/long @ alt
+    MAV.setGuidedModeWP(item)                                                  # On se rend au waypoint
     print 'Going to WP'
-    print 'Ready for bombing'                                    # StandBy
-    bombe(n)                                                     # Launch bomb number n (n equal 1 or 2)
-    print 'bombs away'                                           # Bombs away
-   
-   
-    print 'set new WP'                                           # Go to next WP
-    item2 = MissionPlanner.Utilities.Locationwp()                # creating waypoint
-    cap_drone = cs.groundcourse                                  # cap du drone
-    (lat2, lng2) = BibliLocalisation.coordsNextWaypoint(coords_croix, cap_drone, cap_drone)        # Calculating new latitude and longitude
-    alt2 = cs.alt                                                # set Altitude
-    MissionPlanner.Utilities.Locationwp.lat.SetValue(item2,lat2) # sets latitude
-    MissionPlanner.Utilities.Locationwp.lng.SetValue(item2,lng2) # sets longitude
-    MissionPlanner.Utilities.Locationwp.alt.SetValue(item2,alt2) # sets altitude
-    print 'WP2 set'
-    MAV.setGuidedModeWP(item2)                                   # tells UAV "go to" the set lat/long @ alt
-    print 'Going to WP2'
-    
-    
-    
-def Fleche_detectee(coords_fleche, angle_fleche):
+
+ 
+def takeOff(alt):
     """
-    Crée un nouveau waypoint 15m plus loin que la flèche, dans la direction de la flèche et guide le drône vers celui ci.
-    """   
-    print 'set new WP'                                          # Go to next WP
-    item = MissionPlanner.Utilities.Locationwp()                # creating waypoint
-    cap_drone =  cs.groundcourse                                # cap du drone
-    (lat, lng) = BibliLocalisation.coordsNextWaypoint(coords_fleche, angle_fleche, cap_drone) # Calculating new latitude and longitude                                               # Keep same altitude
-    alt = cs.alt                                                # set Altitude
-    MissionPlanner.Utilities.Locationwp.lat.SetValue(item,lat)  # sets latitude
-    MissionPlanner.Utilities.Locationwp.lng.SetValue(item,lng)  # sets longitude
-    MissionPlanner.Utilities.Locationwp.alt.SetValue(item,alt)  # sets altitude
-    print 'WP set'
-    MAV.setGuidedModeWP(item)                                   # tells UAV "go to" the set lat/long @ alt
-    print 'Going to WP'
+    Le drone décolle à la vertical et se met à l'altitude demandée
+    """
+    Script.ChangeMode("Guided")                                                # On passe en mode "Guided"
+
+    MAV.doCommand(MAVLink.MAV_CMD.TAKEOFF, 0, 0, 0, 0, 0, 0, alt)              # Decolle à l'altitude voulue    
+
+
+   
+def land():
+    """
+    Atterrit à l'endroit demandé
+    """
+    lat = cs.lat
+    lng = cs.lng    
+    
+    MAV.doCommand(MAVLink.MAV_CMD.LAND, 0, 0, 0, 0, lat, lng, 0)               # On atterrit
+    
     
     
     
