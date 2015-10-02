@@ -16,6 +16,12 @@ from os import system
 import subprocess as sub
 import sys
 import time
+import clr
+import sys
+clr.AddReference("MAVLink")
+import MAVLink
+import MissionPlanner
+clr.AddReference("MissionPlanner.Utilities")                                   # includes the Utilities class
 
 print('début du script d\'exécution de mission')
 
@@ -50,7 +56,8 @@ os.chdir(path) # modifie le répertoire de travail de MP
 sys.path.append(cf.libpath)
 import BibliSysteme as bibsys
 #import BibliNav as nav
-import Drone as classDrone
+execfile(cf.libpath + '/' + 'Drone.py')
+execfile(cf.libpath + '/' + 'BibliAction.py')
 
 # infos sur le drone
 coords_drone = (48.7077, 2.1602)
@@ -69,24 +76,26 @@ def quit_subprocess(p, drone_status):
     print('impossible de quitter : drone pas désarmé')
     return 0
 
-def drone_startup():
-  # attend que le drone soit prêt et arme les moteurs
-  print('startup : attend que le drone doit prêt et arme les moteurs...')
-  sys.stdout.flush()
-  time.sleep(5)
-  print('moteurs armés')
-  drone_status = 'armed'
-  print('drone_status : ' + str(drone_status))
-  print('set_mode(guided)')
-  print('prêt à commencer la mission')
-  sys.stdout.flush()
-  return 1
+#def drone_startup():
+#  # attend que le drone soit prêt et arme les moteurs
+#  print('startup : attend que le drone doit prêt et arme les moteurs...')
+#  sys.stdout.flush()
+#  time.sleep(5)
+#  print('moteurs armés')
+#  drone_status = 'armed'
+#  print('drone_status : ' + str(drone_status))
+#  print('set_mode(guided)')
+#  print('prêt à commencer la mission')
+#  sys.stdout.flush()
+#  return 1
   
 
 # Démarre le drone -------------------------------------------------------------
 
 #à la fin de la fonction, le drone est prêt à décoller
-drone_startup()
+print('lance la procédure d\'armement des moteurs')
+sys.stdout.flush()
+#warmUp(30)
 
 
 # Lance la ROF -----------------------------------------------------------------
@@ -100,12 +109,14 @@ t0 = time.time()
 
 # Initialise l'automate --------------------------------------------------------
 
-drone = classDrone.Drone((coords_drone, cap_drone, alt_drone), cf.initial_target)
+drone = Drone((coords_drone, cap_drone, alt_drone), cf.initial_target)
 
 
 # Boucle principale ------------------------------------------------------------
 while(True):
-    
+
+  # TODO : actualiser coords, altitude et cap drone
+
   # envoie des arguments à p
   args_rof = bibsys.wrap_args_rof(coords_drone, alt_drone, cap_drone)
   p.stdin.write(args_rof + "\n")   

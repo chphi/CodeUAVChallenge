@@ -32,10 +32,18 @@ class Rectangle:
         self.aire = []
         self.estDetecte = False
         
-        # Tracking du noir
-        frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        th = cv2.adaptiveThreshold(frame2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, n_zone,v_moy)
+        # Denoising et smoothing
+        frame_denoise = cv2.medianBlur(frame,n_blur)
+#        frame_blurred = cv2.GaussianBlur(frame_denoise, (n_blur, n_blur), 0)
+#        cv2.imshow('frame_blurred', frame_blurred)
+        # passage en niveaux de gris
+        frame_gray = cv2.cvtColor(frame_denoise, cv2.COLOR_BGR2GRAY)
+        # seuillage
+        th = cv2.adaptiveThreshold(frame_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, n_zone,v_moy)
+#        cv2.imshow('th 1', th)
+        # opening
         opening = cv2.morphologyEx(th, cv2.MORPH_OPEN, kernel)
+#        cv2.imshow('opening', opening)        
         
         # Calcul des contours
         _, contours, hierarchy = cv2.findContours(opening.copy(), cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
@@ -46,6 +54,7 @@ class Rectangle:
         # 2ème passe : fittage de rectangle (si on le fait après l'approx tout ressemble à un rectangle)        
         rect_probables = []
         for cnt in cnt_pertinents:
+#            cv2.drawContours(frame, [cnt], -1, (0,0,127),2)
            # fitte un rectangle
             rect = cv2.minAreaRect(cnt)
             # calcule l'aire du rectangle fitté
@@ -55,13 +64,13 @@ class Rectangle:
             aire_cnt = M['m00'] 
             if aire_cnt/aire_rect > seuil_aire:
                rect_probables.append(cnt)
-#               cv2.drawContours(frame, [cnt], -1, (255, 0, 0), 1)        
+#               cv2.drawContours(frame, [cnt], -1, (255, 0, 0), 2)        
       
         # 3ème passe : on approxime les contours restants et on ne garde que ceux à 4 coins
         for cnt in rect_probables:
           epsilon = epsi_ratio*cv2.arcLength(cnt,True)
           approx = cv2.approxPolyDP(cnt,epsilon,True)
-          if len(approx) == 4:   
+          if len(approx) >= 4:   
                 M = cv2.moments(approx)
                 cv2.drawContours(frame, [approx], -1, (255,255,255), 2)
                 cx, cy = int(M['m10']/M['m00']) , int(M['m01']/M['m00'])

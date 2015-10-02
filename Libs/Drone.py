@@ -26,6 +26,7 @@ import conf_drone as cf
 # importe les biblis persos
 sys.path.append(cf.libpath)
 import BibliNav as nav
+execfile(cf.libpath + '/' + 'BibliAction.py')
 
 
 # Définition de la classe ------------------------------------------------------
@@ -45,7 +46,7 @@ class Drone(object):
     # cap actuel du drone
     self.cap = cap_drone
     # coordonnées du drone
-    self.coords = coords_drone
+    self.coords = coords_drone    # (lat, lng)
     # altitude courante du drone
     self.alti = alt_drone
     # altitude demandée
@@ -54,6 +55,8 @@ class Drone(object):
     self.last_known_location = initial_coords
     # destination en cours (coords cibles initiales ou point dans l'alignement de la dernière flèche vue)
     self.destination = initial_coords
+    # slot de largage actif
+    self.active_bomb = 1
     
     # initialise la machine à états
     self.machine = Machine(model=self, states=Drone.states, initial='standby', ignore_invalid_triggers=cf.ignore_invalid_triggers)
@@ -78,6 +81,7 @@ class Drone(object):
   def set_altitude(self, target_alti):
     self.set_alt_consigne(target_alti)
     print('je monte/descends verticalement à ' + str(self.alt_consigne) + 'm d\'altitude')
+    self.go_to(self.coords, target_alti)
     sys.stdout.flush()
 
 
@@ -86,6 +90,11 @@ class Drone(object):
     self.destination = arrow_coords
     print( 'je vais à l\'emplacement de la flèche:' )
     self.go_to(self.destination, cf.nav_alt)
+    time_start = time.time()
+    while (cs.wp_dist > cf.wp_radius):
+        time.sleep(0.01)
+        if time_start - time.time() > 30:
+            break
     print('j\'y suis, j\'enregistre cette position comme étant la dernière connue')
     self.last_known_location = arrow_coords
     print( 'je calcule ma prochaine destination...' )
@@ -97,12 +106,19 @@ class Drone(object):
   def drop_load(self, cross_coords):
     print( 'je vais au dessus de la croix : ' + str(cross_coords) )
     self.go_to(cross_coords, cf.dropping_alt)
+    # attend qu'on se soit approché suffisamment du point GPS
+    while (cs.wp_dist > cf.wp_radius):
+        time.sleep(0.01)
+        if time_start - time.time() > 5:
+            break
     print('je largue la charge')
     sys.stdout.flush()
+    bomb(self.active_bomb)
     # attend le largage de la charge
     time.sleep(cf.dropping_time)
     print('charge larguée')
-    sys.stdout.flush() 
+    sys.stdout.flush()
+    self.active_bomb = 2 # on passe sur la bombe 2
     # remonte quand la charge est larguée
     self.set_altitude(cf.takeoff_alt)
     # repart vers la précédente destination  
@@ -116,21 +132,25 @@ class Drone(object):
 
   def shutdown(self):
     # arrête les moteurs puis les désarme
-    print "shutdown!"
+    print "shutdown! (NOT IMPLEMENTED, RTL IN REPLACEMENT)"
     sys.stdout.flush()
+    do_return_to_launch()
   
   def decolle(self):
     # monte à la verticale
     self.set_altitude(cf.takeoff_alt)
+    
     # finit la montée en avançant vers les 1ères coordonnées
     print('je me dirige maintenant vers les 1ères coordonnées cibles :')
     self.go_to(self.destination, cf.nav_alt)
     sys.stdout.flush()
 
   def go_to(self, coords_cible, alt_cible) :
-    # TODO : ne pas oublier de supprimer l'ancien WP cible avant d'en créer un autre
     # va aux coordonnées et à l'altitude indiquées, en ligne droite
     print( "go_to( " + str(coords_cible) + ", " + str(alt_cible) + " )" )
+    lat = coords_cible[0]
+    lng = coords_cible[1]
+    set_new_wp(lat, lng, alt_cible)
     # mémorise l'altitude d'arrivée demandée comme nouvelle altitude consigne
     self.set_alt_consigne(alt_cible)
     sys.stdout.flush()
@@ -152,10 +172,12 @@ class Drone(object):
     self.go_to(landing_coords, cf.landing_alt)
     print('j\'y suis, j\'atterris à la verticale')
     sys.stdout.flush()
+    land()
   
   def return_to_launch(self):
     print('je retourne à la zone de décollage')
     sys.stdout.flush()
+    do_return_to_launch()   
     
   def update_status(self, coords_drone, cap_drone, alt_drone, rof_data):
 #     effectue la transition appropriée à la situation, en fonction des données à disposition.

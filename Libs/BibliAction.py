@@ -7,7 +7,7 @@ Created on Wed Aug 05 18:05:46 2015
 
                 ####################################################
                 #                                                  #
-                #              Bibliothèque des action             #
+                #              Bibliothèque des actions            #
                 #                                                  #
                 ####################################################
 
@@ -22,15 +22,6 @@ Sommaire des fonctions :
 
   - armeDrone
       -> Arme le drone
-      
-  - fonction1
-      -> Arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
-
-  - fonction2
-      -> Arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
-      
-  - fonction3
-      -> Arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
 
   - warmUp
       -> Arme le drone et essaie pendant timeOut secondes    
@@ -46,6 +37,15 @@ Sommaire des fonctions :
 
   - land
       -> Le drone atterrit
+      
+  - fonction1
+      -> Arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
+
+  - fonction2
+      -> Arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
+      
+  - fonction3
+      -> Arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
 
 """
 
@@ -82,94 +82,18 @@ def armeDrone(bool):
     else:
         MAV.doARM("false")
 
-def fonction1():
-    """
-    Arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
-    """
-    # Armement des moteurs ----------------------------------------------------    
-    print "début du script"
 
-    time.sleep(1)                                                              # On attend 10s
-    armeDrone(True)                                                            # On arme les moteurs
-    time.sleep(3)
-    droneArme()                                                                # On indique l'état du drone
-    time.sleep(5)
-    
-    # Desarmements des moteurs ------------------------------------------------
-    armeDrone(False)                                                           # On désarme les moteurs
-    time.sleep(12)
-    droneArme()                                                                # On indique l'état du drone
-    time.sleep(1)
-    
-    Script.ChangeMode("stabilize")                                             # On rend la main au pilote
-    time.sleep(10)
-    print "script terminé"
-
-   
-def fonction2(n, inputAlt):
-    """
-    Arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
-    """
-    time.sleep(1)                                                              
-    print 'Starting Mission'
-
-    # Décollage ---------------------------------------------------------------
-    armeDrone()                                                                # On arme les moteurs
-    time.sleep(2)
-    droneArme()                                                                # Indique si le drone est armé 
-    Script.Sleep(3)
-    
-    decollage(inpuAlt)
-    
-    # Attente -----------------------------------------------------------------
-    time.sleep(n*1000)
-    
-    print 'Mission Complete'
-    
-    # Atterrissage ------------------------------------------------------------
-    Script.ChangeMode("RTL")                                                   # Return to Launch point
-    print 'Returning to Launch'
-    time.sleep(2)
-    print 'Fin de la Mission'
-    
-def fonction3(lat, lng, alt):
-    """
-    Arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
-    """
-    time.sleep(10)                                                             
-    print 'Starting Mission'
-
-
-    #Décollage ----------------------------------------------------------------
-    armeDrone()                                                                # On arme les moteurs
-    time.sleep(3)
-    droneArme()                                                                # Indique si le drone est armé 
-    #Nouveau Waypoint ---------------------------------------------------------
-    set_new_wp(lat, lng, alt)                                                  # Nouveau WayPoint
-    time.sleep(1)
-       
-    #Atterrissage -------------------------------------------------------------
-    if (cs.wp_dist < 1):
-        Script.ChangeMode("LAND")                                              # On passe au mode "LAND"
-        print 'LAND'
-    
-
-
-def warmUp():
+def warmUp(warmup_time):
     """
     Tente d'armer le drone pendant max_warmup_time secondes
     """
-    
-    # Début -------------------------------------------------------------------
     t0 = time.time()
     time.sleep(1)
-    print 'début du script'
+    print 'début de la procédure d\'armement des moteurs'
     time.sleep(1)
     
-    while time.time() - t0 < cf.max_warmup_time:
-        
+    while time.time() - t0 < warmup_time:
         MAV.doARM("true")
-        
         time.sleep(2)
         if droneArme():
             return True
@@ -194,15 +118,10 @@ def bombe(n):
         MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO, 11 ,1500, 0, 0, 0, 0, 0)   # On revient au centre
         print 'Bomb2 away'
 
-    
- 
-  
-
-
 
 def set_new_wp(lat, lng, alt):
     """
-    Défini un nouveau WayPoint et s'y rend
+    Définit un nouveau WayPoint et s'y rend
     """
     
     item = MissionPlanner.Utilities.Locationwp()                               # Création du waypoint
@@ -233,6 +152,86 @@ def land():
     lng = cs.lng    
     
     MAV.doCommand(MAVLink.MAV_CMD.LAND, 0, 0, 0, 0, lat, lng, 0)               # On atterrit
+  
+  
+def do_return_to_launch():
+    Script.ChangeMode('RTL') 
+  
+  
+def fonction1():
+    """
+    Arme le drone puis le désarme, rend le contrôle au pilote (mode stabilize).
+    """
+    # Armement des moteurs ----------------------------------------------------    
+    print "début du script"
+
+    time.sleep(1)                                                              # On attend 10s
+    armeDrone(True)                                                            # On arme les moteurs
+    time.sleep(3)
+    droneArme()                                                                # On indique l'état du drone
+    time.sleep(5)
+    
+    # Desarmements des moteurs ------------------------------------------------
+    armeDrone(False)                                                           # On désarme les moteurs
+    time.sleep(12)
+    droneArme()                                                                # On indique l'état du drone
+    time.sleep(1)
+    
+    Script.ChangeMode("stabilize")                                             # On rend la main au pilote
+    time.sleep(10)
+    print "script terminé"  
+
+  
+def fonction2(n, inputAlt):
+    """
+    Arme le drone, décolle à la verticale, attend N secondes (loiter) et atterrit.
+    """
+    time.sleep(1)                                                              
+    print 'Starting Mission'
+
+    # Décollage ---------------------------------------------------------------
+    armeDrone()                                                                # On arme les moteurs
+    time.sleep(2)
+    droneArme()                                                                # Indique si le drone est armé 
+    Script.Sleep(3)
+    
+    decollage(inpuAlt)
+    
+    # Attente -----------------------------------------------------------------
+    time.sleep(n*1000)
+    
+    print 'Mission Complete'
+    
+    # Atterrissage ------------------------------------------------------------
+    Script.ChangeMode("RTL")                                                   # Return to Launch point
+    print 'Returning to Launch'
+    time.sleep(2)
+    print 'Fin de la Mission'
+    
+    
+def fonction3(lat, lng, alt):
+    """
+    Arme le drone, décolle à la verticale, va vers un point GPS et atterrit.
+    """
+    time.sleep(10)                                                             
+    print 'Starting Mission'
+
+
+    #Décollage ----------------------------------------------------------------
+    armeDrone()                                                                # On arme les moteurs
+    time.sleep(3)
+    droneArme()                                                                # Indique si le drone est armé 
+    #Nouveau Waypoint ---------------------------------------------------------
+    set_new_wp(lat, lng, alt)                                                  # Nouveau WayPoint
+    time.sleep(1)
+       
+    #Atterrissage -------------------------------------------------------------
+    if (cs.wp_dist < 1):
+        Script.ChangeMode("LAND")                                              # On passe au mode "LAND"
+        print 'LAND'
+    
+
+
     
     
     
