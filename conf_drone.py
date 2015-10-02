@@ -69,6 +69,8 @@ epsi_ratio = 0.05                        # longueur min de l'approx des contours
 RT = 6368000.0                           # rayon de la terre (en mètres)
 taille_image = (640, 480)
 centre_image = (320, 240)
+
+# TODO : à changer !!! =>
 ouverture_camera = 60.0     
 
 taille_mem = 4                           # nb d'infos gardées en mémoire (initialiser les listes associées au bon nb d'élts)
@@ -86,6 +88,7 @@ ignore_invalid_triggers = True
 # Variables mission ------------------------------------------------------------
 
 max_time = 300                           # temps max pour l'exécution de la mission, au delà on s'arrête
+max_warmup_time = 30
 dropping_time = 1                        # temps de largage de bombe (en secondes)
 max_alt = 20                             # altitude de consigne max autorisée (en mètres)
 landing_alt = 3                          # altitude à laquelle on se place au dessus de la zone d'atterro pour atterrissage vertical
@@ -93,7 +96,7 @@ takeoff_alt = 5                          # alt à laquelle on décolle à la ver
 nav_alt = 7                              # altitude par défaut pour la navigation
 dropping_alt = 2                         # altitude à laquelle on largue les bombes
 min_rof_alt = 1.5                        # altitude mini de prise en compte des infos de la reconnaissance de formes
-
+wp_radius = 2                            # distance à un WP pour le valider
 
 # Divers -----------------------------------------------------------------------
 
