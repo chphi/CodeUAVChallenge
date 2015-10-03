@@ -46,7 +46,7 @@ class Rectangle:
 #        cv2.imshow('opening', opening)        
         
         # Calcul des contours
-        _, contours, hierarchy = cv2.findContours(opening.copy(), cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(opening.copy(), cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
         
         # 1ère passe : filtrage des contours pertinents (aire, solidité, ratio de longueurs)
         cnt_pertinents = track.trouveObjetsProbables(opening, aire_min, aire_max, self.sMin, 1, self.rMin, self.rMax)

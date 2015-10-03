@@ -15,10 +15,13 @@ détecte les flèches et les croix
 import cv2
 import sys
 
+#Robin : pour pouvoir afficher les erreurs de compilation
+sys.stderr = open("error_log.txt", "w")
+
 
 # Variables --------------------------------------------------------------------
 
-conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+conf_path = 'C:/Users/Robin/Prog/CodeUAVChallenge'
 
 # infos sur le drone
 coords_drone = (48.7077, 2.1602)
@@ -95,9 +98,9 @@ while(True):
     frame = track.getImage(cf.is_cam_embarquee, capture)
    
     # Détection objets
-    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
-    croix.detecteCroix(frame, cf.dh, cf.n_blur, K, cf.Amin, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
-    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
+    fleche.detecteFleche(frame, cf.dh, cf.n_blur, K, cf.Amin_fleche, cf.Amax, patrons_fleche, cf.pas_angle_fleche, cf.seuil_certitude_fleche, cf.sat_min, cf.val_min, cf.n_gauss)
+    croix.detecteCroix(frame, cf.n_zone_croix, cf.v_moy_croix, cf.n_blur, K, cf.Amin_croix, cf.Amax, patrons_croix, cf.pas_angle_croix, cf.seuil_certitude_croix, cf.sat_min, cf.val_min, cf.n_gauss)
+    rectangle.detecteRectangle(frame, cf.n_blur, K, cf.Amin_rect, cf.Amax, cf.seuil_aire, cf.n_zone, cf.v_moy, cf.epsi_ratio)
 
     # validation détection et consolidation infos
     donnees_fleche = constra.analyseReconnaissanceFleche(fleche, liste_coords_fleche, liste_caps_fleche, cf.taille_mem, cf.seuil_sigma_pos, cf.seuil_sigma_cap, coords_drone, cap_drone, alt_drone, orientation_cam)
@@ -106,11 +109,11 @@ while(True):
     
     # affichage validation objets
     if donnees_fleche[0]:          # si la flèche a été validée
-        cv2.putText(frame, 'fleche valide', (20,30), font, size_factor, rouge, 2, cv2.LINE_AA)
+        cv2.putText(frame, 'fleche valide', (20,30), font, size_factor, rouge, 2, cv2.CV_AA)
     if donnees_croix[0]:
-        cv2.putText(frame, 'croix valide', (20,60), font, size_factor, jaune, 2, cv2.LINE_AA)
+        cv2.putText(frame, 'croix valide', (20,60), font, size_factor, jaune, 2, cv2.CV_AA)
     if donnees_rectangle[0]:
-        cv2.putText(frame, 'rectangle valide', (20,90), font, size_factor, blanc, 2, cv2.LINE_AA)
+        cv2.putText(frame, 'rectangle valide', (20,90), font, size_factor, blanc, 2, cv2.CV_AA)
 
     # vérification si objets pas encore vus, choix du plus pertinent (si plusieurs valides en même temps à l'image)
     # si nouvel objet détecté : ajout au parcours

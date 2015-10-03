@@ -61,7 +61,7 @@ from VideoCapture import Device
 
 # Définition des variables ----------------------------------------------------
 
-conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+conf_path = 'C:/Users/Robin/Prog/CodeUAVChallenge'
     
 # Initialisation du programme -------------------------------------------------
 
@@ -78,14 +78,14 @@ def initVideoFlow(is_cam_embarquee):
     cv2.namedWindow('frame')
         
     if is_cam_embarquee:
-        print('caméra embarquée')
+        #print('caméra embarquée')
         try:
            cap = Device(devnum=cf.emb_cam_num, showVideoWindow=0)
         except Exception, e:
            print e
            cv2.destroyAllWindows()
     else:
-        print('caméra interne')
+        #print('caméra interne')
         try:  
            cap = Device(devnum=cf.webcam_num, showVideoWindow=0)
         except Exception, e:
@@ -233,7 +233,7 @@ def trouveObjetsProbables(opening, aire_min, aire_max, s_min, s_max, r_min, r_ma
     
     image, Amin, Amax, t, s_min, s_max, r_min, r_max -> contours pertinents
     """
-    _, contours, _ = cv2.findContours(opening, cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
+    contours,_ = cv2.findContours(opening, cv2.RETR_EXTERNAL ,cv2.CHAIN_APPROX_SIMPLE)
     objets_probables = trouveContoursPertinents(contours, aire_min, aire_max, s_min, s_max, r_min, r_max)
     
     return objets_probables

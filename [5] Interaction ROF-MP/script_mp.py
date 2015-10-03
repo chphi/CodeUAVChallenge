@@ -21,11 +21,11 @@ import time
 # Variables -------------------------------------------------------------------
 
 # emplacement du code (pour donner le path à Mission Planner et en faire le répertoire de travail)
-root = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+root = 'C:/Users/Robin/Prog/CodeUAVChallenge'
 script_dir = '[5] Interaction ROF-MP'
 
 # emplacement du fichier de configuration
-conf_path = 'D:/Charles/Documents/Sumo/Dassault UAV Challenge/Code/CodeUAVChallenge'
+conf_path = 'C:/Users/Robin/Prog/CodeUAVChallenge'
 
 # variable de debug
 drone_status = 'disarmed'
