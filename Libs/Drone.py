@@ -93,7 +93,7 @@ class Drone(object):
     time_start = time.time()
     while (cs.wp_dist > cf.wp_radius):
         time.sleep(0.01)
-        if time_start - time.time() > 30:
+        if time_start - time.time() > 5:
             break
     print('j\'y suis, j\'enregistre cette position comme étant la dernière connue')
     self.last_known_location = arrow_coords
@@ -170,6 +170,10 @@ class Drone(object):
     print('je vais aux coords d\'atterrissage : ' + str(landing_coords) )
     # éventuellement: commence déjà à descendre :
     self.go_to(landing_coords, cf.landing_alt)
+    while (cs.wp_dist > cf.wp_radius):
+        time.sleep(0.01)
+        if time_start - time.time() > 5:
+            break
     print('j\'y suis, j\'atterris à la verticale')
     sys.stdout.flush()
     land()
