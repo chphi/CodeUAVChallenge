@@ -20,7 +20,7 @@ libpath = 'C:/Users/Robin/Prog/CodeUAVChallenge/Libs'
 
 # Variables ROF ------------------------------------------------------------------------
 
-is_cam_embarquee = False                   # utilisation de la webcam ou de la caméra embarquée
+is_cam_embarquee = True                   # utilisation de la webcam ou de la caméra embarquée
 emb_cam_num = 0                           # n° de device de la caméra du drone (tester pour chaque pc)
 webcam_num = 0                            # idem pour la webcam (à tester aussi)
 
